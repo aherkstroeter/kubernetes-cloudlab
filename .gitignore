@@ -1,0 +1,3 @@
+01_Terraform/.terraform.lock.hcl
+01_Terraform/.terraform/
+01_Terraform/terraform.tfstate
