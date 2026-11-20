@@ -1,0 +1,12 @@
+hostname: argocd.lab.anselmherkstroeter.com
+gatewayClassName: eg
+gatewayName: lab
+controllerName: gateway.envoyproxy.io/gatewayclass-controller
+issuerName: letsencrypt
+acmeEmail: anselmherkstroter@gmail.com
+acmeServer: https://acme-v02.api.letsencrypt.org/directory
+project: project-d5d6243a-0e10-43fb-8c4
+hostedZoneName: anselmherkstroeter-com
+certificateSecret: argocd-lab-tls
+backendService: argocd-server
+backendPort: 80
