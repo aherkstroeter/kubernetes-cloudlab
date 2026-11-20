@@ -42,8 +42,8 @@ run "helm_then_manifest" {
   }
 
   assert {
-    condition     = can(regex("(?s)helm upgrade --install 'argocd'.*apply_url 'https://example.com/root-app.yaml'.*k3s kubectl -n argocd get deploy", output.script))
-    error_message = "Helm must run before manifests, and the extra script must run last."
+    condition     = can(regex("(?s)helm status 'argocd' --namespace 'argocd'.*helm upgrade --install 'argocd'.*apply_url 'https://example.com/root-app.yaml'.*k3s kubectl -n argocd get deploy", output.script))
+    error_message = "Helm must run before manifests, and the extra script must run last. An existing release is skipped."
   }
 
   assert {
