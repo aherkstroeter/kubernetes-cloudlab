@@ -5,4 +5,7 @@
 01_Terraform/terraform.tfstate.backup
 01_Terraform/terraform.tfvars
 01_Terraform/*.auto.tfvars
+.terraform/
+.terraform.lock.hcl
+.terraform.tfstate.lock.info
 00_Obsidian/
