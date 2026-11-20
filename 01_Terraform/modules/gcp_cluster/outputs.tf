@@ -8,6 +8,11 @@ output "network_id" {
   value       = google_compute_network.this.id
 }
 
+output "network_self_link" {
+  description = "VPC network self link."
+  value       = google_compute_network.this.self_link
+}
+
 output "subnet_name" {
   description = "Subnet name."
   value       = google_compute_subnetwork.this.name
@@ -35,6 +40,7 @@ output "instances" {
       internal_ip = vm.network_interface[0].network_ip
       external_ip = try(vm.network_interface[0].access_config[0].nat_ip, null)
       zone        = vm.zone
+      self_link   = vm.self_link
     }
   }
 }

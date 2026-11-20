@@ -63,6 +63,7 @@ variable "nodes" {
     machine_type     = string
     startup_script   = optional(string, "")
     disk_size_gb     = optional(number, 50)
+    disk_type        = optional(string, "pd-standard")
     tags             = optional(list(string), [])
     labels           = optional(map(string), {})
     assign_public_ip = optional(bool, false)
@@ -72,6 +73,24 @@ variable "nodes" {
   validation {
     condition     = alltrue([for node in var.nodes : node.disk_size_gb >= 10 && node.disk_size_gb == floor(node.disk_size_gb)])
     error_message = "Each node disk must be a whole number of gigabytes, at least 10."
+  }
+
+  validation {
+    condition = alltrue([
+      for node in var.nodes : contains(["pd-standard", "pd-balanced", "pd-ssd"], node.disk_type)
+    ])
+    error_message = "disk_type must be pd-standard, pd-balanced, or pd-ssd."
+  }
+
+  validation {
+    condition = alltrue([
+      for node in var.nodes : (
+        !can(regex("^(a2|a3|a4|g2|g4)-", node.machine_type)) &&
+        !strcontains(lower(node.machine_type), "gpu") &&
+        !strcontains(lower(node.machine_type), "nvidia")
+      )
+    ])
+    error_message = "machine_type must not be a GPU type. Families a2, a3, a4, g2, and g4, and names containing gpu or nvidia, are rejected."
   }
 }
 

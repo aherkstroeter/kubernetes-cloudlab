@@ -91,6 +91,7 @@ resource "google_compute_instance" "node" {
     initialize_params {
       image = data.google_compute_image.boot.self_link
       size  = each.value.disk_size_gb
+      type  = each.value.disk_type
     }
   }
 
