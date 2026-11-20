@@ -1,0 +1,5 @@
+# GCP delivers this address through the passthrough rule and does not add a
+# local route on the guest. Without this, the node drops packets for the API VIP.
+if ! ip route show table local | grep -Fq 'local ${api_address} '; then
+  ip addr replace '${api_address}/32' dev lo
+fi

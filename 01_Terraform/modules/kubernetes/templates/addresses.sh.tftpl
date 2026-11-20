@@ -1,0 +1,57 @@
+# Terraform owns these objects. Argo CD installs MetalLB but does not manage the pool.
+k3s kubectl apply -f - <<'LAB_ADDRESSES_END'
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lab-addresses
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/managed-by: terraform
+data:
+  apiAddress: "${api_address}"
+  apiDomain: "${api_domain}"
+LAB_ADDRESSES_END
+%{ if length(service_addresses) > 0 ~}
+
+# MetalLB is installed from Git after this node boots. A missing CRD must not fail boot.
+ready=0
+for attempt in $(seq 1 30); do
+  if k3s kubectl get crd ipaddresspools.metallb.io >/dev/null 2>&1; then
+    ready=1
+    break
+  fi
+  sleep 10
+done
+if [[ "$ready" -ne 1 ]]; then
+  echo "MetalLB CRD ipaddresspools.metallb.io is not installed yet; the address pool will be applied on a later boot" >&2
+  exit 0
+fi
+
+k3s kubectl create namespace metallb-system --dry-run=client -o yaml | k3s kubectl apply -f -
+k3s kubectl apply -f - <<'LAB_ADDRESSES_END'
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: public
+  namespace: metallb-system
+  labels:
+    app.kubernetes.io/managed-by: terraform
+spec:
+  autoAssign: true
+  addresses:
+%{ for address in service_addresses ~}
+    - ${address}/32
+%{ endfor ~}
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: public
+  namespace: metallb-system
+  labels:
+    app.kubernetes.io/managed-by: terraform
+spec:
+  ipAddressPools:
+    - public
+LAB_ADDRESSES_END
+%{ endif ~}

@@ -28,6 +28,29 @@ output "primary_api_urls" {
   value       = local.server_urls
 }
 
+output "api_address" {
+  description = "Public address of the Kubernetes API. Point api_domain at this address."
+  value       = module.addresses.addresses["api"].address
+}
+
+output "api_domain" {
+  description = "Hostname placed on the API server certificate."
+  value       = var.api_domain
+}
+
+output "service_addresses" {
+  description = "Public addresses MetalLB may assign to Services of type LoadBalancer, keyed by name."
+  value = {
+    for name in var.service_addresses : name => module.addresses.addresses[name].address
+  }
+}
+
+output "primary_startup_script" {
+  description = "Startup script of the first control-plane node. Contains the cluster token."
+  value       = local.primary_startup
+  sensitive   = true
+}
+
 output "network_name" {
   description = "VPC network name."
   value       = module.vms.network_name
@@ -44,6 +67,6 @@ output "subnet_cidr" {
 }
 
 output "kubeconfig_command" {
-  description = "Prints the admin kubeconfig from the primary over IAP. The server address in that file is the node's loopback until a floating API address exists. The caller also needs roles/iap.tunnelResourceAccessor."
+  description = "Prints the admin kubeconfig from the primary over IAP. Rewrite the server line to https://<api_domain>:6443. The caller also needs roles/iap.tunnelResourceAccessor."
   value       = "gcloud compute ssh ${local.primary_name} --project ${var.project_id} --zone ${var.zone} --tunnel-through-iap --command 'sudo cat /etc/rancher/k3s/k3s.yaml'"
 }
