@@ -1,16 +1,12 @@
 install -d -m 0700 /var/lib/bootstrap
-cat > /var/lib/bootstrap/argocd-repo-key <<'ARGOCD_REPO_KEY_END'
-${private_key}
-ARGOCD_REPO_KEY_END
-chmod 0600 /var/lib/bootstrap/argocd-repo-key
 
+# Public repository. Delete first so an older SSH key cannot linger in the Secret data map.
+k3s kubectl -n argocd delete secret repo-kubernetes-cloudlab --ignore-not-found
 k3s kubectl -n argocd create secret generic repo-kubernetes-cloudlab \
   --from-literal=type=git \
-  --from-literal=url='git@github.com:cy6er0wl/kubernetes-cloudlab.git' \
-  --from-file=sshPrivateKey=/var/lib/bootstrap/argocd-repo-key \
-  --dry-run=client -o yaml \
-  | k3s kubectl label --local -f - argocd.argoproj.io/secret-type=repository --overwrite -o yaml \
-  | k3s kubectl apply -f -
+  --from-literal=url='https://github.com/aherkstroeter/kubernetes-cloudlab.git'
+k3s kubectl -n argocd label secret repo-kubernetes-cloudlab \
+  argocd.argoproj.io/secret-type=repository --overwrite
 
 cat > /var/lib/bootstrap/root-app.yaml <<'ARGOCD_ROOT_APP_END'
 ${root_app}

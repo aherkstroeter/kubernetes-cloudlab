@@ -48,6 +48,6 @@ output "dns_name_servers" {
 }
 
 output "argocd_deploy_key" {
-  description = "Public key to add to the GitHub repo as a read-only deploy key."
+  description = "Generated deploy key. The lab repo is public, so bootstrap clones over HTTPS and does not install this key."
   value       = var.install_argocd ? tls_private_key.argocd_repo[0].public_key_openssh : null
 }

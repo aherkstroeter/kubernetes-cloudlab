@@ -22,7 +22,7 @@ service_addresses = ["lb-0"]
 
 # install_argocd installs the Argo CD Helm chart and applies 02_ArgoCD/bootstrap/root-app.yaml.
 # The root chart then installs kube-vip, MetalLB, and echo. Leave bootstrap null when this is true.
-# The repo is git@github.com:cy6er0wl/kubernetes-cloudlab.git. Terraform prints a deploy key to add on GitHub.
+# The repo is public: https://github.com/aherkstroeter/kubernetes-cloudlab.git. Argo CD clones it over HTTPS.
 # install_argocd = true
 
 # Cloud DNS for the whole domain. Point the registrar nameservers at the dns_name_servers output.

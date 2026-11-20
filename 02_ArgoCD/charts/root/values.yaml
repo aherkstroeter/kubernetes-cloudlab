@@ -1,11 +1,11 @@
-repoURL: git@github.com:cy6er0wl/kubernetes-cloudlab.git
+repoURL: https://github.com/aherkstroeter/kubernetes-cloudlab.git
 targetRevision: master
 
 projects:
   platform:
     description: Cluster platform. kube-vip and MetalLB.
     sourceRepos:
-      - git@github.com:cy6er0wl/kubernetes-cloudlab.git
+      - https://github.com/aherkstroeter/kubernetes-cloudlab.git
       - https://metallb.github.io/metallb
     destinations:
       - namespace: kube-system
@@ -16,7 +16,7 @@ projects:
   workloads:
     description: Lab workloads.
     sourceRepos:
-      - git@github.com:cy6er0wl/kubernetes-cloudlab.git
+      - https://github.com/aherkstroeter/kubernetes-cloudlab.git
     destinations:
       - namespace: echo
     clusterResourceWhitelist:

@@ -56,8 +56,7 @@ locals {
       values_yaml = local.argocd_values
     }]
     script = templatefile("${path.module}/templates/argocd-bootstrap.sh.tftpl", {
-      private_key = tls_private_key.argocd_repo[0].private_key_openssh
-      root_app    = file("${path.module}/../02_ArgoCD/bootstrap/root-app.yaml")
+      root_app = file("${path.module}/../02_ArgoCD/bootstrap/root-app.yaml")
     })
   } : var.bootstrap
 }
