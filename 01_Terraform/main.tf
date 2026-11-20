@@ -1,35 +1,20 @@
-terraform {
-  required_providers {
-    google = {
-      source  = "hashicorp/google"
-      version = "8.11.0"
-    }
-  }
-}
+module "cluster" {
+  source = "./modules/kubernetes"
 
-provider "google" {
-  project = "project-d5d6243a-0e10-43fb-8c4"
-  region  = "us-central1"
-  zone    = "us-central1-c"
-}
-
-resource "google_compute_network" "vpc_network" {
-  name = "terraform-network"
-}
-
-resource "google_compute_instance" "vm_instance" {
-  name         = "terraform-instance"
-  machine_type = "n1-standard-2"
-
-  boot_disk {
-    initialize_params {
-      image = "debian-cloud/debian-13"
-    }
-  }
-
-  network_interface {
-    network = google_compute_network.vpc_network.name
-    access_config {
-    }
-  }
+  project_id        = var.project_id
+  region            = var.region
+  zone              = var.zone
+  cluster_name      = var.cluster_name
+  cluster_token     = var.cluster_token
+  server_count      = var.server_count
+  agent_count       = var.agent_count
+  server_type       = var.server_type
+  agent_type        = var.agent_type
+  disk_size_gb      = var.disk_size_gb
+  subnet_cidr       = var.subnet_cidr
+  assign_public_ip  = var.assign_public_ip
+  enable_nat        = var.enable_nat
+  k3s_channel       = var.k3s_channel
+  ssh_source_ranges = var.ssh_source_ranges
+  bootstrap         = var.bootstrap
 }
