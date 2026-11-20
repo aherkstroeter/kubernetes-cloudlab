@@ -1,0 +1,8 @@
+name: echo
+project: workloads
+namespace: echo
+wave: "0"
+syncOptions:
+  - CreateNamespace=true
+sources:
+  - path: manifests

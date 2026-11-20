@@ -1,0 +1,82 @@
+# One Application per app folder. argo_app.yaml lists sources with paths relative to
+# that folder: Helm valueFiles are filenames beside it, and path: manifests is the
+# manifests directory. This set prefixes those with the folder and, when a chart is
+# present, adds one git source named values for $values/<folder>/<file>.
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: lab
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+spec:
+  goTemplate: true
+  goTemplateOptions:
+    - missingkey=zero
+  generators:
+    - git:
+        repoURL: https://github.com/aherkstroeter/kubernetes-cloudlab.git
+        revision: master
+        files:
+          - path: 02_ArgoCD/01_networking/*/argo_app.yaml
+          - path: 02_ArgoCD/02_platform/*/argo_app.yaml
+          - path: 02_ArgoCD/03_workloads/*/argo_app.yaml
+  template:
+    apiVersion: argoproj.io/v1alpha1
+    kind: Application
+    metadata:
+      name: "{{ .name }}"
+      namespace: argocd
+      annotations:
+        argocd.argoproj.io/sync-wave: "{{ .wave }}"
+      finalizers:
+        - resources-finalizer.argocd.argoproj.io
+    spec:
+      project: "{{ .project }}"
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: "{{ .namespace }}"
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: true
+        retry:
+          limit: 5
+          backoff:
+            duration: 10s
+            factor: 2
+            maxDuration: 3m
+        syncOptions: []
+  templatePatch: |
+    spec:
+      syncPolicy:
+        syncOptions:
+        {{ range .syncOptions }}
+        - {{ printf "%q" . }}
+        {{ end }}
+      sources:
+        {{ $dir := .path.path }}
+        {{ $hasChart := false }}
+        {{ range .sources }}
+        {{ if index . "chart" }}
+        {{ $hasChart = true }}
+        - repoURL: {{ printf "%q" (index . "repoURL") }}
+          chart: {{ printf "%q" (index . "chart") }}
+          targetRevision: {{ printf "%q" (index . "targetRevision") }}
+          helm:
+            releaseName: {{ printf "%q" (index (index . "helm") "releaseName") }}
+            valueFiles:
+            {{ range index (index . "helm") "valueFiles" }}
+            - {{ printf "%q" (printf "$values/%s/%s" $dir .) }}
+            {{ end }}
+        {{ else if index . "path" }}
+        - repoURL: "https://github.com/aherkstroeter/kubernetes-cloudlab.git"
+          targetRevision: master
+          path: {{ printf "%q" (printf "%s/%s" $dir (index . "path")) }}
+        {{ end }}
+        {{ end }}
+        {{ if $hasChart }}
+        - repoURL: "https://github.com/aherkstroeter/kubernetes-cloudlab.git"
+          targetRevision: master
+          ref: values
+        {{ end }}

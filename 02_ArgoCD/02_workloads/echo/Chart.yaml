@@ -1,6 +1,0 @@
-apiVersion: v2
-name: echo
-description: LoadBalancer Service used to prove the MetalLB floating address.
-type: application
-version: 0.1.0
-appVersion: v1.10.3

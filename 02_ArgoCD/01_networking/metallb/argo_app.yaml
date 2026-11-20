@@ -1,0 +1,15 @@
+name: metallb
+project: platform
+namespace: metallb-system
+wave: "0"
+syncOptions:
+  - CreateNamespace=true
+  - ServerSideApply=true
+sources:
+  - repoURL: https://metallb.github.io/metallb
+    chart: metallb
+    targetRevision: 0.16.2
+    helm:
+      releaseName: metallb
+      valueFiles:
+        - values.yaml

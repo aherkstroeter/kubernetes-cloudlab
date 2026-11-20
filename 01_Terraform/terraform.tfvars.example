@@ -24,7 +24,7 @@ service_addresses = ["lb-0"]
 
 # install_argocd installs the Argo CD Helm chart on the first boot and applies
 # 02_ArgoCD/bootstrap/root-app.yaml. Later boots leave that release for Argo CD.
-# The root chart installs the platform and workload charts. Leave bootstrap null when this is true.
+# The root app applies 02_ArgoCD/appsets, and that ApplicationSet installs the platform and workload apps. Leave bootstrap null when this is true.
 # The repo is public: https://github.com/aherkstroeter/kubernetes-cloudlab.git. Argo CD clones it over HTTPS.
 # install_argocd = true
 

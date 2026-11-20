@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/aherkstroeter/kubernetes-cloudlab.git
     targetRevision: master
-    path: 02_ArgoCD/charts/root
+    path: 02_ArgoCD/appsets
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd

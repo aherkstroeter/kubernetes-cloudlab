@@ -1,0 +1,16 @@
+name: cert-manager
+project: platform
+namespace: cert-manager
+wave: "0"
+syncOptions:
+  - CreateNamespace=true
+  - ServerSideApply=true
+sources:
+  - repoURL: https://charts.jetstack.io
+    chart: cert-manager
+    targetRevision: v1.21.3
+    helm:
+      releaseName: cert-manager
+      valueFiles:
+        - values.yaml
+  - path: manifests

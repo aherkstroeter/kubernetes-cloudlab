@@ -1,3 +1,0 @@
-image: traefik/whoami:v1.10.3
-service:
-  port: 80

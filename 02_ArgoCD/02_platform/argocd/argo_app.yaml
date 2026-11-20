@@ -1,0 +1,15 @@
+name: argocd
+project: platform
+namespace: argocd
+wave: "1"
+syncOptions:
+  - CreateNamespace=true
+sources:
+  - repoURL: https://argoproj.github.io/argo-helm
+    chart: argo-cd
+    targetRevision: 10.18.2
+    helm:
+      releaseName: argocd
+      valueFiles:
+        - values.yaml
+  - path: manifests

@@ -1,0 +1,16 @@
+name: envoy-gateway
+project: platform
+namespace: envoy-gateway-system
+wave: "0"
+syncOptions:
+  - CreateNamespace=true
+  - ServerSideApply=true
+sources:
+  - repoURL: docker.io/envoyproxy
+    chart: gateway-helm
+    targetRevision: v1.10.0
+    helm:
+      releaseName: eg
+      valueFiles:
+        - values.yaml
+  - path: manifests

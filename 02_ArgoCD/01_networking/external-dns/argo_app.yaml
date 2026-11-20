@@ -1,0 +1,15 @@
+name: external-dns
+project: platform
+namespace: external-dns
+wave: "1"
+syncOptions:
+  - CreateNamespace=true
+  - ServerSideApply=true
+sources:
+  - repoURL: https://kubernetes-sigs.github.io/external-dns/
+    chart: external-dns
+    targetRevision: 1.23.0
+    helm:
+      releaseName: external-dns
+      valueFiles:
+        - values.yaml
