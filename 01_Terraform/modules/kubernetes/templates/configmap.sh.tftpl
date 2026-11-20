@@ -1,0 +1,13 @@
+# Terraform owns this ConfigMap. kube-vip reads apiAddress from it.
+k3s kubectl apply -f - <<'LAB_ADDRESSES_END'
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: lab-addresses
+  namespace: kube-system
+  labels:
+    app.kubernetes.io/managed-by: terraform
+data:
+  apiAddress: "${api_address}"
+  apiDomain: "${api_domain}"
+LAB_ADDRESSES_END

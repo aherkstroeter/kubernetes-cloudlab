@@ -121,11 +121,15 @@ module "bootstrap" {
 
   manifest_urls = local.bootstrap_manifest_urls
   helm_releases = local.bootstrap_helm_releases
+  # The ConfigMap has to exist before kube-vip starts. The pool has to wait until
+  # the MetalLB chart has installed its CRDs, so it stays after the user script.
   script = join("\n", compact([
+    trimspace(templatefile("${path.module}/templates/configmap.sh.tftpl", {
+      api_address = module.addresses.addresses["api"].address
+      api_domain  = var.api_domain
+    })),
     trimspace(local.bootstrap_user_script),
     trimspace(templatefile("${path.module}/templates/addresses.sh.tftpl", {
-      api_address       = module.addresses.addresses["api"].address
-      api_domain        = var.api_domain
       service_addresses = [for name in var.service_addresses : module.addresses.addresses[name].address]
     })),
   ]))
