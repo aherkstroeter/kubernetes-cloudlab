@@ -1,0 +1,70 @@
+#!/bin/bash
+# Rendered by the bootstrap module. Runs on a node where k3s kubectl already works.
+# Re-runs on every boot, so every step must be safe to repeat.
+set +x
+set -euo pipefail
+
+export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+
+for attempt in $(seq 1 60); do
+  if k3s kubectl get --raw='/readyz' >/dev/null 2>&1; then
+    break
+  fi
+  if [[ "$attempt" -eq 60 ]]; then
+    echo "kubernetes API did not become ready" >&2
+    exit 1
+  fi
+  sleep 5
+done
+
+%{ if length(helm_releases) > 0 ~}
+if ! command -v helm >/dev/null 2>&1; then
+  curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+fi
+
+install -d -m 0700 /var/lib/bootstrap
+%{ for idx, release in helm_releases ~}
+%{ if release.values_yaml != "" ~}
+cat > /var/lib/bootstrap/helm-${idx}.yaml <<'BOOTSTRAP_VALUES_${idx}'
+${release.values_yaml}
+BOOTSTRAP_VALUES_${idx}
+%{ endif ~}
+helm repo add --force-update bootstrap-${idx} '${replace(release.repository, "'", "'\\''")}'
+%{ endfor ~}
+helm repo update
+%{ for idx, release in helm_releases ~}
+helm upgrade --install '${replace(release.name, "'", "'\\''")}' \
+  'bootstrap-${idx}/${replace(release.chart, "'", "'\\''")}' \
+  --namespace '${replace(release.namespace, "'", "'\\''")}' \
+  --create-namespace \
+%{ if release.version != "" ~}
+  --version '${replace(release.version, "'", "'\\''")}' \
+%{ endif ~}
+%{ if release.values_yaml != "" ~}
+  -f /var/lib/bootstrap/helm-${idx}.yaml \
+%{ endif ~}
+  --wait --timeout 10m
+%{ endfor ~}
+%{ endif ~}
+
+apply_url() {
+  local url="$1"
+  local attempt
+  for attempt in $(seq 1 30); do
+    if k3s kubectl apply -f "$url"; then
+      return 0
+    fi
+    echo "apply failed for $url (attempt $attempt); retrying" >&2
+    sleep 10
+  done
+  echo "giving up on $url" >&2
+  return 1
+}
+
+%{ for url in manifest_urls ~}
+apply_url '${replace(url, "'", "'\\''")}'
+%{ endfor ~}
+
+%{ if extra_script != "" ~}
+${extra_script}
+%{ endif ~}
