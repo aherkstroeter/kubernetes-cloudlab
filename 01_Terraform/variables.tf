@@ -46,6 +46,35 @@ variable "disk_size_gb" {
   default = 50
 }
 
+variable "disk_type" {
+  type    = string
+  default = "pd-standard"
+}
+
+variable "api_domain" {
+  type = string
+}
+
+variable "api_source_ranges" {
+  type    = list(string)
+  default = []
+}
+
+variable "service_source_ranges" {
+  type    = list(string)
+  default = null
+}
+
+variable "service_addresses" {
+  type    = list(string)
+  default = ["lb-0"]
+}
+
+variable "extra_server_args" {
+  type    = list(string)
+  default = ["--disable=servicelb", "--disable=traefik"]
+}
+
 variable "subnet_cidr" {
   type    = string
   default = "10.10.0.0/16"

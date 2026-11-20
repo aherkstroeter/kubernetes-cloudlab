@@ -22,6 +22,18 @@ output "primary_api_urls" {
   value = module.cluster.primary_api_urls
 }
 
+output "api_address" {
+  value = module.cluster.api_address
+}
+
+output "api_domain" {
+  value = module.cluster.api_domain
+}
+
+output "service_addresses" {
+  value = module.cluster.service_addresses
+}
+
 output "network_name" {
   value = module.cluster.network_name
 }

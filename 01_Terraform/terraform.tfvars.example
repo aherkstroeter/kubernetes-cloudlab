@@ -5,13 +5,28 @@ server_count  = 1
 agent_count   = 0
 server_type   = "e2-medium"
 agent_type    = "e2-medium"
+disk_type     = "pd-standard"
+
+# Hostname for the API certificate. Not an IP. DNS for this name is separate.
+api_domain = "api.example.com"
+
+# One MetalLB address, plus the API address which is not part of that pool.
+service_addresses = ["lb-0"]
+
+# Who may open the public API and the service addresses. Empty creates no client rule.
+# api_source_ranges = ["203.0.113.10/32"]
 
 # Nodes are private. Cloud NAT is on by default so they can download k3s.
 # assign_public_ip = false
 # enable_nat       = true
 
-# Install Argo CD, then let it sync the repo. Leave this unset until you want that.
-# Helm runs first, then manifests, then script.
+# Install Argo CD, then let it sync the private repo. Leave this unset until you want that.
+# Helm runs first, then manifests, then the address script Terraform appends.
+# The repo is git@github.com:cy6er0wl/kubernetes-cloudlab.git. Argo CD needs its own
+# deploy key. Do not put that SSH URL in manifest_urls; those must be public https.
+#
+# resourceExclusionsAdditional keeps Argo CD from taking the Terraform-owned
+# MetalLB pool. The chart appends these to its default exclusions.
 #
 # bootstrap = {
 #   helm_releases = [{
@@ -19,15 +34,17 @@ agent_type    = "e2-medium"
 #     repository = "https://argoproj.github.io/argo-helm"
 #     chart      = "argo-cd"
 #     namespace  = "argocd"
+#     values_yaml = <<-EOT
+#       configs:
+#         cm:
+#           resourceExclusionsAdditional:
+#             - apiGroups:
+#                 - metallb.io
+#               kinds:
+#                 - IPAddressPool
+#                 - L2Advertisement
+#               clusters:
+#                 - "*"
+#     EOT
 #   }]
-#   manifest_urls = [
-#     "https://example.com/argocd/root-app.yaml",
-#   ]
-# }
-#
-# Or a manifest only:
-# bootstrap = {
-#   manifest_urls = [
-#     "https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml",
-#   ]
 # }
