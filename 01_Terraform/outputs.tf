@@ -41,3 +41,13 @@ output "network_name" {
 output "kubeconfig_command" {
   value = module.cluster.kubeconfig_command
 }
+
+output "dns_name_servers" {
+  description = "Nameservers to set at the registrar when dns_domain is set."
+  value       = var.dns_domain == null ? [] : google_dns_managed_zone.lab[0].name_servers
+}
+
+output "argocd_deploy_key" {
+  description = "Public key to add to the GitHub repo as a read-only deploy key."
+  value       = var.install_argocd ? tls_private_key.argocd_repo[0].public_key_openssh : null
+}

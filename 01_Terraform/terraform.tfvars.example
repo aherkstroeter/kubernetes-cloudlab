@@ -20,19 +20,24 @@ service_addresses = ["lb-0"]
 # assign_public_ip = false
 # enable_nat       = true
 
-# Install Argo CD, then let it sync the private repo. Leave this unset until you want that.
-# Helm runs first, then manifests, then the address script Terraform appends.
-# The repo is git@github.com:cy6er0wl/kubernetes-cloudlab.git. Argo CD needs its own
-# deploy key. Do not put that SSH URL in manifest_urls; those must be public https.
-#
-# resourceExclusionsAdditional keeps Argo CD from taking the Terraform-owned
-# MetalLB pool. The chart appends these to its default exclusions.
+# install_argocd installs the Argo CD Helm chart and applies 02_ArgoCD/bootstrap/root-app.yaml.
+# The root chart then installs kube-vip, MetalLB, and echo. Leave bootstrap null when this is true.
+# The repo is git@github.com:cy6er0wl/kubernetes-cloudlab.git. Terraform prints a deploy key to add on GitHub.
+# install_argocd = true
+
+# Cloud DNS for the whole domain. Point the registrar nameservers at the dns_name_servers output.
+# dns_domain = "example.com"
+# service_hostnames = { lb-0 = "echo.lab.example.com" }
+
+# A custom bootstrap still works when install_argocd is false. manifest_urls must be public https.
+# resourceExclusionsAdditional keeps Argo CD from taking the Terraform-owned MetalLB pool.
 #
 # bootstrap = {
 #   helm_releases = [{
 #     name       = "argocd"
 #     repository = "https://argoproj.github.io/argo-helm"
 #     chart      = "argo-cd"
+#     version    = "10.18.2"
 #     namespace  = "argocd"
 #     values_yaml = <<-EOT
 #       configs:

@@ -100,6 +100,24 @@ variable "ssh_source_ranges" {
   default = ["35.235.240.0/20"]
 }
 
+variable "install_argocd" {
+  type        = bool
+  default     = false
+  description = "Install Argo CD with Helm and apply the root app. Leave bootstrap null when this is true."
+}
+
+variable "dns_domain" {
+  type        = string
+  default     = null
+  description = "Public Cloud DNS zone, such as example.com. Null skips DNS. api_domain and service_hostnames must be names inside it."
+}
+
+variable "service_hostnames" {
+  type        = map(string)
+  default     = {}
+  description = "Service address name to hostname. Each name gets an A record at that floating address."
+}
+
 variable "bootstrap" {
   type = object({
     manifest_urls = optional(list(string), [])

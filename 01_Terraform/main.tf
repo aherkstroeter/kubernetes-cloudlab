@@ -1,3 +1,67 @@
+resource "terraform_data" "lab_inputs" {
+  lifecycle {
+    precondition {
+      condition     = !(var.install_argocd && var.bootstrap != null)
+      error_message = "install_argocd builds the Argo CD bootstrap. Leave bootstrap null when it is true."
+    }
+
+    precondition {
+      condition = (
+        var.dns_domain == null && length(var.service_hostnames) == 0
+        ) || (
+        var.dns_domain != null &&
+        endswith(var.api_domain, ".${var.dns_domain}") &&
+        alltrue([
+          for name, host in var.service_hostnames :
+          contains(var.service_addresses, name) && endswith(host, ".${var.dns_domain}")
+        ])
+      )
+      error_message = "dns_domain is the zone, such as example.com. api_domain and every service hostname must be inside it, and each service_hostnames key must be a service address name."
+    }
+  }
+}
+
+resource "tls_private_key" "argocd_repo" {
+  count = var.install_argocd ? 1 : 0
+
+  algorithm = "ED25519"
+}
+
+locals {
+  argocd_values = <<-EOT
+    dex:
+      enabled: false
+    notifications:
+      enabled: false
+    configs:
+      cm:
+        resourceExclusionsAdditional:
+          - apiGroups:
+              - metallb.io
+            kinds:
+              - IPAddressPool
+              - L2Advertisement
+            clusters:
+              - "*"
+  EOT
+
+  bootstrap = var.install_argocd ? {
+    manifest_urls = []
+    helm_releases = [{
+      name        = "argocd"
+      repository  = "https://argoproj.github.io/argo-helm"
+      chart       = "argo-cd"
+      version     = "10.18.2"
+      namespace   = "argocd"
+      values_yaml = local.argocd_values
+    }]
+    script = templatefile("${path.module}/templates/argocd-bootstrap.sh.tftpl", {
+      private_key = tls_private_key.argocd_repo[0].private_key_openssh
+      root_app    = file("${path.module}/../02_ArgoCD/bootstrap/root-app.yaml")
+    })
+  } : var.bootstrap
+}
+
 module "cluster" {
   source = "./modules/kubernetes"
 
@@ -22,5 +86,7 @@ module "cluster" {
   enable_nat            = var.enable_nat
   k3s_channel           = var.k3s_channel
   ssh_source_ranges     = var.ssh_source_ranges
-  bootstrap             = var.bootstrap
+  bootstrap             = local.bootstrap
+
+  depends_on = [terraform_data.lab_inputs]
 }
