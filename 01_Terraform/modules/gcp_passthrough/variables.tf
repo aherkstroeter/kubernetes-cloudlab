@@ -1,5 +1,5 @@
 variable "name" {
-  description = "Prefix for the instance group, health check, backend service, and forwarding rule. At most 60 characters so the health-check suffix still fits in GCP's 63-character limit."
+  description = "Name of the health check, backend service, and forwarding rule. At most 60 characters so the health-check suffix still fits in GCP's 63-character limit."
   type        = string
 
   validation {
@@ -18,29 +18,9 @@ variable "region" {
   }
 }
 
-variable "zone" {
-  description = "Zone of the unmanaged instance group. Every instance must be in this zone."
+variable "backend_group" {
+  description = "Self link of the unmanaged instance group that receives traffic. Every passthrough rule in a cluster must share one group: GCP rejects a VM that is in two load-balanced instance groups. Backend services that share a group must use the same balancing mode."
   type        = string
-
-  validation {
-    condition     = can(regex("^[a-z]+-[a-z]+[0-9]+-[a-z]$", var.zone))
-    error_message = "zone must look like us-central1-a."
-  }
-}
-
-variable "network" {
-  description = "VPC self link or id for the instance group. Instances must already be on this network."
-  type        = string
-}
-
-variable "instances" {
-  description = "Instance self links that may receive traffic for this address."
-  type        = list(string)
-
-  validation {
-    condition     = length(var.instances) > 0
-    error_message = "instances must contain at least one instance self link."
-  }
 }
 
 variable "address" {

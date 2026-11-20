@@ -190,14 +190,26 @@ module "vms" {
   firewall_rules = local.firewall_rules
 }
 
+# One group for every forwarding rule. GCP allows a VM to be in only one
+# load-balanced instance group, so the API rule and the service rules cannot
+# each bring their own group. Agents fail the TCP 6443 health check and receive
+# no load-balanced traffic until that check moves to a port they serve.
+resource "google_compute_instance_group" "nodes" {
+  name    = "${var.cluster_name}-nodes"
+  zone    = var.zone
+  network = module.vms.network_self_link
+  instances = nonsensitive([
+    for name in concat(local.server_names, local.agent_names) :
+    module.vms.instances[name].self_link
+  ])
+}
+
 module "api_lb" {
   source = "../gcp_passthrough"
 
   name              = "${var.cluster_name}-api"
   region            = var.region
-  zone              = var.zone
-  network           = module.vms.network_self_link
-  instances         = nonsensitive([for name in local.server_names : module.vms.instances[name].self_link])
+  backend_group     = google_compute_instance_group.nodes.self_link
   address           = module.addresses.addresses["api"].self_link
   health_check_port = 6443
   ports             = ["6443"]
@@ -209,9 +221,7 @@ module "service_lb" {
 
   name              = "${var.cluster_name}-${each.key}"
   region            = var.region
-  zone              = var.zone
-  network           = module.vms.network_self_link
-  instances         = nonsensitive([for name in concat(local.server_names, local.agent_names) : module.vms.instances[name].self_link])
+  backend_group     = google_compute_instance_group.nodes.self_link
   address           = module.addresses.addresses[each.key].self_link
   health_check_port = 6443
   all_ports         = true

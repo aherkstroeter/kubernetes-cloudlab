@@ -13,13 +13,7 @@ resource "terraform_data" "ports" {
 # EXTERNAL, not EXTERNAL_MANAGED. This is the classic passthrough network load
 # balancer: it keeps the original destination address, which is what the guest
 # and MetalLB expect. ARP from the VM cannot publish a Google public address.
-resource "google_compute_instance_group" "this" {
-  name      = "${var.name}-ig"
-  zone      = var.zone
-  network   = var.network
-  instances = var.instances
-}
-
+# The instance group is supplied by the caller so several rules can share it.
 resource "google_compute_region_health_check" "this" {
   name   = "${var.name}-hc"
   region = var.region
@@ -37,7 +31,7 @@ resource "google_compute_region_backend_service" "this" {
   health_checks         = [google_compute_region_health_check.this.id]
 
   backend {
-    group          = google_compute_instance_group.this.self_link
+    group          = var.backend_group
     balancing_mode = "CONNECTION"
   }
 }
