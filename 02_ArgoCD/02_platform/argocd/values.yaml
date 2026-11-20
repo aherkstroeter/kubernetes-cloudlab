@@ -1,4 +1,5 @@
 # lab: argo-cd 10.18.2. Changes are marked below. Dex and notifications stay off.
+# The shared Gateway lives with envoy-gateway. This chart attaches the HTTPS listener, the HTTPRoute, and the cert-manager Certificate.
 ## Argo CD configuration
 ## Ref: https://github.com/argoproj/argo-cd
 ##
@@ -44,7 +45,8 @@ crds:
 global:
   # -- Default domain used by all components
   ## Used for ingresses, certificates, SSO, notifications, etc.
-  domain: argocd.example.com
+  # lab: public hostname. The ListenerSet and the cert-manager Certificate use this.
+  domain: argocd.lab.anselmherkstroeter.com
 
   # -- Runtime class name for all components
   runtimeClassName: ""
@@ -214,7 +216,7 @@ configs:
     ## Ref: https://argo-cd.readthedocs.io/en/latest/faq/#how-to-disable-admin-user
     admin.enabled: true
 
-    # lab: public URL. Envoy terminates TLS for this hostname.
+    # lab: public URL. The shared Gateway's ListenerSet terminates TLS for this hostname.
     url: https://argocd.lab.anselmherkstroeter.com
 
     # -- Timeout to discover if a new manifests version got published to the repository
@@ -459,7 +461,7 @@ configs:
     # -- Annotations to be added to the argocd-cmd-params-cm ConfigMap
     annotations: {}
 
-    # lab: Envoy terminates TLS and proxies to argocd-server on port 80.
+    # lab: the ListenerSet terminates TLS and the HTTPRoute proxies to argocd-server on port 80.
     server.insecure: "true"
 
     # You can customize parameters by adding parameters here.
@@ -2592,7 +2594,8 @@ server:
   ## Ref: https://argo-cd.readthedocs.io/en/stable/operator-manual/tls/#tls-certificates-used-by-argocd-server
   certificate:
     # -- Deploy a Certificate resource (requires cert-manager)
-    enabled: false
+    # lab: Let's Encrypt DNS-01 via the cert-manager ClusterIssuer. Secret name is argocd-server-tls.
+    enabled: true
     # -- Certificate primary domain (commonName)
     # @default -- `""` (defaults to global.domain)
     domain: ""
@@ -2610,11 +2613,12 @@ server:
     ## Ref: https://cert-manager.io/docs/concepts/issuer
     issuer:
       # -- Certificate issuer group. Set if using an external issuer. Eg. `cert-manager.io`
-      group: ""
+      # lab: ClusterIssuer from the cert-manager app.
+      group: cert-manager.io
       # -- Certificate issuer kind. Either `Issuer` or `ClusterIssuer`
-      kind: ""
+      kind: ClusterIssuer
       # -- Certificate issuer name. Eg. `letsencrypt`
-      name: ""
+      name: letsencrypt
     # Private key of the certificate
     privateKey:
       # -- Rotation policy of private key when certificate is re-issued. Either: `Never` or `Always`
@@ -2971,7 +2975,8 @@ server:
   # Refer to https://gateway-api.sigs.k8s.io/implementations/ for controller-specific details
   httproute:
     # -- Enable HTTPRoute resource for Argo CD server (Gateway API)
-    enabled: false
+    # lab: attaches to the ListenerSet below. parentRefs stay empty so the chart targets that ListenerSet.
+    enabled: true
     # -- Additional HTTPRoute labels
     labels: {}
     # -- Additional HTTPRoute annotations
@@ -2985,7 +2990,9 @@ server:
       #   sectionName: https
     # -- List of hostnames for the HTTPRoute
     # @default -- `[]` (See [values.yaml])
-    hostnames: []
+    # lab: this name is what external-dns publishes. It matches the ListenerSet hostname.
+    hostnames:
+      - argocd.lab.anselmherkstroeter.com
       # - argocd.example.com
     # -- HTTPRoute rules configuration
     # @default -- `[]` (See [values.yaml])
@@ -3074,7 +3081,8 @@ server:
   # Refer to https://gateway-api.sigs.k8s.io/reference/api-spec/1.5/spec/#listenerset
   listenerset:
     # -- Enable ListenerSet resource for Argo CD server (Gateway API)
-    enabled: false
+    # lab: HTTPS listener on the shared networking Gateway, certificate from server.certificate.
+    enabled: true
     # -- Additional ListenerSet labels
     labels: {}
     # -- Additional ListenerSet annotations
@@ -3082,7 +3090,12 @@ server:
     # -- Gateway API parentRef for the ListenerSet
     ## Must reference an existing Gateway. Unlike HTTPRoute, ListenerSet accepts exactly one parentRef.
     # @default -- `{}` (See [values.yaml])
-    parentRef: {}
+    # lab: Gateway lab in envoy-gateway-system. allowedListeners there accepts this namespace.
+    parentRef:
+      name: lab
+      namespace: envoy-gateway-system
+      kind: Gateway
+      group: gateway.networking.k8s.io
       # name: example-gateway
       # namespace: example-gateway-namespace
     # -- Hostname for the synthesized listener. Defaults to global.domain when empty.

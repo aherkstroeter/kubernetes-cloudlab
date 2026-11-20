@@ -12,4 +12,3 @@ sources:
       releaseName: argocd
       valueFiles:
         - values.yaml
-  - path: manifests

@@ -1,4 +1,4 @@
-# lab: upstream defaults for gateway-helm v1.10.0. The GatewayClass is in manifests/.
+# lab: upstream defaults for gateway-helm v1.10.0. The GatewayClass and the shared lab Gateway are in manifests/.
 # Global settings
 global:
   # If set, these take highest precedence and change envoyGateway, envoyProxy, and ratelimit's container registry and pull secrets.

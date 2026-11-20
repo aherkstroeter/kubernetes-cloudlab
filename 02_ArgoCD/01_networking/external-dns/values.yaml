@@ -223,7 +223,8 @@ triggerLoopOnEvent: false
 namespaced: false
 
 # -- if `true`, the Gateway API ListenerSet flag will be enabled.
-enableGatewayListenerSets: false
+# lab: Argo CD attaches its HTTPS listener with a ListenerSet. Follow that to the shared Gateway address.
+enableGatewayListenerSets: true
 
 # -- _Gateway API_ gateway namespace to watch.
 # When `namespaced=true`, setting this value avoids creating any cluster-scoped RBAC
