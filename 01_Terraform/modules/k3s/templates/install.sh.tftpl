@@ -1,0 +1,150 @@
+#!/bin/bash
+# Rendered by the k3s module. xtrace stays off so K3S_TOKEN is not copied to the serial log.
+set +x
+set -euo pipefail
+
+if ! command -v curl >/dev/null 2>&1; then
+  if command -v apt-get >/dev/null 2>&1; then
+    export DEBIAN_FRONTEND=noninteractive
+    apt-get update -y
+    apt-get install -y curl ca-certificates
+  elif command -v dnf >/dev/null 2>&1; then
+    dnf install -y curl ca-certificates
+  else
+    echo "curl is required to install k3s" >&2
+    exit 1
+  fi
+fi
+
+read -r -d '' K3S_TOKEN <<'K3S_MODULE_TOKEN_END' || true
+${cluster_token}
+K3S_MODULE_TOKEN_END
+K3S_TOKEN="$${K3S_TOKEN%$'\n'}"
+if [[ -z "$K3S_TOKEN" ]]; then
+  echo "k3s cluster token is empty" >&2
+  exit 1
+fi
+export K3S_TOKEN
+
+read -r -d '' NODE_IP_COMMAND <<'K3S_MODULE_NODE_IP_END' || true
+${node_ip_command}
+K3S_MODULE_NODE_IP_END
+NODE_IP_COMMAND="$${NODE_IP_COMMAND%$'\n'}"
+
+read -r -d '' TLS_SAN_COMMAND <<'K3S_MODULE_TLS_SAN_END' || true
+${tls_san_command}
+K3S_MODULE_TLS_SAN_END
+TLS_SAN_COMMAND="$${TLS_SAN_COMMAND%$'\n'}"
+
+lookup() {
+  local cmd="$1"
+  local attempt result
+  for attempt in $(seq 1 30); do
+    if result="$(bash -c "$cmd")" && [[ -n "$result" ]]; then
+      printf '%s\n' "$result"
+      return 0
+    fi
+    sleep 2
+  done
+  echo "command failed after 30 attempts" >&2
+  return 1
+}
+
+NODE_IP=""
+if [[ -n "$NODE_IP_COMMAND" ]]; then
+  NODE_IP="$(lookup "$NODE_IP_COMMAND" | tail -n 1)"
+fi
+
+TLS_SANS=()
+%{ for san in tls_sans ~}
+TLS_SANS+=('${replace(san, "'", "'\\''")}')
+%{ endfor ~}
+if [[ -n "$TLS_SAN_COMMAND" ]]; then
+  san_output="$(lookup "$TLS_SAN_COMMAND" || true)"
+  if [[ -n "$san_output" ]]; then
+    while IFS= read -r san; do
+      [[ -n "$san" ]] && TLS_SANS+=("$san")
+    done <<< "$san_output"
+  fi
+fi
+
+args=()
+%{ if role == "agent" ~}
+args+=(agent)
+%{ else ~}
+args+=(server)
+%{ endif ~}
+%{ if cluster_init ~}
+args+=(--cluster-init)
+%{ endif ~}
+if [[ -n "$NODE_IP" ]]; then
+  args+=(--node-ip "$NODE_IP")
+fi
+%{ if role == "server" ~}
+if (( $${#TLS_SANS[@]} > 0 )); then
+  for san in "$${TLS_SANS[@]}"; do
+    args+=(--tls-san "$san")
+  done
+fi
+%{ endif ~}
+%{ for arg in extra_args ~}
+args+=('${replace(arg, "'", "'\\''")}')
+%{ endfor ~}
+
+install_k3s() {
+  local server_url="$1"
+  shift
+  if [[ -n "$server_url" ]]; then
+    curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL='${channel}' K3S_TOKEN="$K3S_TOKEN" K3S_URL="$server_url" sh -s - "$@"
+  else
+    curl -sfL https://get.k3s.io | INSTALL_K3S_CHANNEL='${channel}' K3S_TOKEN="$K3S_TOKEN" sh -s - "$@"
+  fi
+}
+
+%{ if include_server_url ~}
+select_server_url() {
+  local url host
+  local -a urls=()
+%{ for url in server_urls ~}
+  urls+=('${replace(url, "'", "'\\''")}')
+%{ endfor ~}
+  if (( $${#urls[@]} == 0 )); then
+    echo "no server url was provided for a joining node" >&2
+    return 1
+  fi
+  for url in "$${urls[@]}"; do
+    host="$${url#*://}"
+    host="$${host%%/*}"
+    host="$${host%%:*}"
+    if command -v getent >/dev/null 2>&1 && getent hosts "$host" >/dev/null 2>&1; then
+      printf '%s' "$url"
+      return 0
+    fi
+  done
+  printf '%s' "$${urls[0]}"
+}
+
+attempt=1
+max=${retry_count}
+until server_url="$(select_server_url)" && install_k3s "$server_url" "$${args[@]}"; do
+  if (( attempt >= max )); then
+    echo "k3s join failed after $${attempt} attempts" >&2
+    exit 1
+  fi
+  echo "k3s join attempt $${attempt} failed; retrying in 10s" >&2
+  attempt=$((attempt + 1))
+  sleep 10
+done
+%{ else ~}
+attempt=1
+max=${retry_count}
+until install_k3s "" "$${args[@]}"; do
+  if (( attempt >= max )); then
+    echo "k3s install failed after $${attempt} attempts" >&2
+    exit 1
+  fi
+  echo "k3s install attempt $${attempt} failed; retrying in 10s" >&2
+  attempt=$((attempt + 1))
+  sleep 10
+done
+%{ endif ~}
