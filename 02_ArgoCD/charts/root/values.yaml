@@ -1,0 +1,49 @@
+repoURL: git@github.com:cy6er0wl/kubernetes-cloudlab.git
+targetRevision: master
+
+projects:
+  platform:
+    description: Cluster platform. kube-vip and MetalLB.
+    sourceRepos:
+      - git@github.com:cy6er0wl/kubernetes-cloudlab.git
+      - https://metallb.github.io/metallb
+    destinations:
+      - namespace: kube-system
+      - namespace: metallb-system
+    clusterResourceWhitelist:
+      - group: "*"
+        kind: "*"
+  workloads:
+    description: Lab workloads.
+    sourceRepos:
+      - git@github.com:cy6er0wl/kubernetes-cloudlab.git
+    destinations:
+      - namespace: echo
+    clusterResourceWhitelist:
+      - group: ""
+        kind: Namespace
+
+applications:
+  kube-vip:
+    project: platform
+    namespace: kube-system
+    path: 02_ArgoCD/charts/kube-vip
+    helm:
+      releaseName: kube-vip
+  metallb:
+    project: platform
+    namespace: metallb-system
+    repoURL: https://metallb.github.io/metallb
+    chart: metallb
+    targetRevision: 0.16.2
+    helm:
+      releaseName: metallb
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  echo:
+    project: workloads
+    namespace: echo
+    path: 02_ArgoCD/charts/echo
+    helm:
+      releaseName: echo

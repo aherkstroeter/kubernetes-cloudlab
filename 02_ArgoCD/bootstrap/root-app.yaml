@@ -1,22 +1,20 @@
 apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
-  name: metallb
+  name: root
   namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
 spec:
   project: default
   source:
-    repoURL: https://metallb.github.io/metallb
-    chart: metallb
-    targetRevision: 0.16.2
-    helm:
-      releaseName: metallb
+    repoURL: git@github.com:cy6er0wl/kubernetes-cloudlab.git
+    targetRevision: master
+    path: 02_ArgoCD/charts/root
   destination:
     server: https://kubernetes.default.svc
-    namespace: metallb-system
+    namespace: argocd
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
-    syncOptions:
-      - CreateNamespace=true

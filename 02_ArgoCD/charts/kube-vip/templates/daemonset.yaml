@@ -32,7 +32,7 @@ spec:
           operator: Exists
       containers:
         - name: kube-vip
-          image: ghcr.io/kube-vip/kube-vip:v1.3.2
+          image: {{ .Values.image | quote }}
           imagePullPolicy: IfNotPresent
           args:
             - manager
@@ -43,7 +43,6 @@ spec:
                 - NET_RAW
                 - SYS_TIME
           env:
-            # kube-vip will not start a control-plane worker unless one mode is on.
             # ARP cannot publish a GCP public address. Routing-table mode with a
             # local route keeps the API address on lo. The passthrough rule publishes it.
             - name: vip_arp
@@ -77,5 +76,5 @@ spec:
             - name: address
               valueFrom:
                 configMapKeyRef:
-                  name: lab-addresses
-                  key: apiAddress
+                  name: {{ .Values.configMap | quote }}
+                  key: {{ .Values.configKey | quote }}

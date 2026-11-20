@@ -1,0 +1,3 @@
+image: ghcr.io/kube-vip/kube-vip:v1.3.2
+configMap: lab-addresses
+configKey: apiAddress

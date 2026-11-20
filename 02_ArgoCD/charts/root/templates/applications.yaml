@@ -1,0 +1,37 @@
+{{- range $name, $app := .Values.applications }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ $name }}
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: {{ $app.project }}
+  source:
+    repoURL: {{ $app.repoURL | default $.Values.repoURL | quote }}
+    targetRevision: {{ $app.targetRevision | default $.Values.targetRevision | quote }}
+    {{- if $app.chart }}
+    chart: {{ $app.chart | quote }}
+    {{- else }}
+    path: {{ $app.path | quote }}
+    {{- end }}
+    {{- with $app.helm }}
+    helm:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: {{ $app.namespace }}
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      {{- if $app.syncOptions }}
+      {{- toYaml $app.syncOptions | nindent 6 }}
+      {{- else }}
+      - CreateNamespace=true
+      {{- end }}
+{{- end }}

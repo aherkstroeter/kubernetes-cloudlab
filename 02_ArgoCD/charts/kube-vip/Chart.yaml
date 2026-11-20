@@ -1,0 +1,6 @@
+apiVersion: v2
+name: kube-vip
+description: Control-plane VIP on lo. The address comes from ConfigMap kube-system/lab-addresses, which Terraform writes. The upstream chart cannot do that, because control-plane mode requires config.address as a literal.
+type: application
+version: 0.1.0
+appVersion: v1.3.2
