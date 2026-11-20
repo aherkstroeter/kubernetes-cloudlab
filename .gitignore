@@ -5,3 +5,4 @@
 01_Terraform/terraform.tfstate.backup
 01_Terraform/terraform.tfvars
 01_Terraform/*.auto.tfvars
+00_Obsidian/
