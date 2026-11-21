@@ -12,11 +12,17 @@ People use hostnames. The nodes have no public address of their own.
 | `02_ArgoCD/01_networking` | kube-vip, MetalLB, Envoy Gateway, external-dns |
 | `02_ArgoCD/02_platform` | Argo CD, cert-manager, External Secrets |
 | `02_ArgoCD/03_workloads` | Apps. Echo is the test Service |
+| `02_ArgoCD/03_workloads/www` | The public site. ClusterIP, certificate, ListenerSet, and routes |
+| `site` | Hugo source for anselmherkstroeter.com |
 | `02_ArgoCD/appsets` | The ApplicationSet that turns each app folder into one Application |
 | `02_ArgoCD/bootstrap` | The root Application. It is the only in-cluster manifest the boot script applies |
 | `01_Terraform/scripts/install-kubeconfig.sh` | Merges this cluster into the local kubeconfig after a rebuild |
 
 An app folder holds `argo_app.yaml` and, when the app is a Helm chart, `values.yaml`. The values file lists only the choices that differ from the pinned chart. Manifests that are not part of the chart live in `manifests/`.
+
+## The site
+
+`site/` is the Hugo source. A push to `master` that changes it builds `ghcr.io/aherkstroeter/www` and writes that tag into the www Deployment. A published note is copied into `site/content/writing/`. A draft is not. The Service is ClusterIP and shares the lab Gateway through a ListenerSet. HTTP and `www.anselmherkstroeter.com` redirect to `https://anselmherkstroeter.com`.
 
 ## Two applies
 

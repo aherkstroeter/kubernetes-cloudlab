@@ -1,0 +1,16 @@
+# ClusterIP. The lab Gateway already has the address. No hostname annotation:
+# external-dns reads the HTTPRoute, not this Service.
+apiVersion: v1
+kind: Service
+metadata:
+  name: www
+  labels:
+    app.kubernetes.io/name: www
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: www
+  ports:
+    - name: http
+      port: 80
+      targetPort: http

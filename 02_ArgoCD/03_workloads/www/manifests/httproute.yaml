@@ -1,0 +1,62 @@
+# Scheme only. www stays www until the HTTPS listener redirects it.
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: http-redirect
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: ListenerSet
+      name: www
+      sectionName: http-apex
+    - group: gateway.networking.k8s.io
+      kind: ListenerSet
+      name: www
+      sectionName: http-www
+  hostnames:
+    - anselmherkstroeter.com
+    - www.anselmherkstroeter.com
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            statusCode: 301
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: www-redirect
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: ListenerSet
+      name: www
+      sectionName: https-www
+  hostnames:
+    - www.anselmherkstroeter.com
+  rules:
+    - filters:
+        - type: RequestRedirect
+          requestRedirect:
+            scheme: https
+            hostname: anselmherkstroeter.com
+            statusCode: 301
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: apex
+spec:
+  parentRefs:
+    - group: gateway.networking.k8s.io
+      kind: ListenerSet
+      name: www
+      sectionName: https-apex
+  hostnames:
+    - anselmherkstroeter.com
+  rules:
+    - backendRefs:
+        - kind: Service
+          name: www
+          port: 80

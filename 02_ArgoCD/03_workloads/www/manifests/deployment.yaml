@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: www
+  labels:
+    app.kubernetes.io/name: www
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: www
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: www
+    spec:
+      containers:
+        - name: www
+          # The site workflow replaces the tag with the commit that built the image.
+          image: ghcr.io/aherkstroeter/www:pending
+          ports:
+            - name: http
+              containerPort: 80
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http

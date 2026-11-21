@@ -1,0 +1,53 @@
+# The Gateway hostname stays *.lab.anselmherkstroeter.com. These listeners
+# attach the apex on the same Envoy, so the site does not take a new address.
+apiVersion: gateway.networking.k8s.io/v1
+kind: ListenerSet
+metadata:
+  name: www
+spec:
+  parentRef:
+    group: gateway.networking.k8s.io
+    kind: Gateway
+    name: lab
+    namespace: envoy-gateway-system
+  listeners:
+    - name: http-apex
+      protocol: HTTP
+      port: 80
+      hostname: anselmherkstroeter.com
+      allowedRoutes:
+        namespaces:
+          from: Same
+    - name: http-www
+      protocol: HTTP
+      port: 80
+      hostname: www.anselmherkstroeter.com
+      allowedRoutes:
+        namespaces:
+          from: Same
+    - name: https-apex
+      protocol: HTTPS
+      port: 443
+      hostname: anselmherkstroeter.com
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: www-tls
+      allowedRoutes:
+        namespaces:
+          from: Same
+    - name: https-www
+      protocol: HTTPS
+      port: 443
+      hostname: www.anselmherkstroeter.com
+      tls:
+        mode: Terminate
+        certificateRefs:
+          - group: ""
+            kind: Secret
+            name: www-tls
+      allowedRoutes:
+        namespaces:
+          from: Same

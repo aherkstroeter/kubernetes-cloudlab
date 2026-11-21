@@ -1,0 +1,8 @@
+name: www
+project: workloads
+namespace: www
+wave: "0"
+syncOptions:
+  - CreateNamespace=true
+sources:
+  - path: manifests
