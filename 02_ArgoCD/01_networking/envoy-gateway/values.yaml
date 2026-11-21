@@ -41,7 +41,8 @@ global:
 # Values for CRDs dependency
 crds:
   # -- Install Envoy Gateway CRDs, Gateway API CRDs, and Gateway API safe upgrade policy resources. Set to false when these resources are managed separately.
-  enabled: true
+  # lab: k3s owns Gateway API standard channel v1.6.3. gateway-crds-helm installs only the Envoy CRDs.
+  enabled: false
 
 # -- Labels to apply to all resources
 commonLabels: {}

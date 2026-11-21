@@ -1,0 +1,10 @@
+# lab: upstream defaults for gateway-crds-helm v1.10.0. Changes are marked below.
+crds:
+  gatewayAPI:
+    # lab: k3s already installed this channel, including ListenerSet. Do not replace it.
+    enabled: false
+    # lab: standard. The chart default is experimental, which the cluster safe-upgrade policy rejects.
+    channel: standard
+  envoyGateway:
+    # lab: the controller needs these CRDs. Gateway API does not ship them.
+    enabled: true

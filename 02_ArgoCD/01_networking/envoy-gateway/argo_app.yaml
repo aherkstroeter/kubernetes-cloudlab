@@ -7,6 +7,13 @@ syncOptions:
   - ServerSideApply=true
 sources:
   - repoURL: docker.io/envoyproxy
+    chart: gateway-crds-helm
+    targetRevision: v1.10.0
+    helm:
+      releaseName: eg-crds
+      valueFiles:
+        - crds-values.yaml
+  - repoURL: docker.io/envoyproxy
     chart: gateway-helm
     targetRevision: v1.10.0
     helm:
