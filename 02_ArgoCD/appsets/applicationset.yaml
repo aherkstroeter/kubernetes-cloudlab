@@ -21,9 +21,9 @@ spec:
           - path: 02_ArgoCD/01_networking/*/argo_app.yaml
           - path: 02_ArgoCD/02_platform/*/argo_app.yaml
           - path: 02_ArgoCD/03_workloads/*/argo_app.yaml
+  # lab: the ApplicationSet API drops apiVersion and kind inside template, so leaving
+  # them in Git keeps this object OutOfSync after every successful sync.
   template:
-    apiVersion: argoproj.io/v1alpha1
-    kind: Application
     metadata:
       name: "{{ .name }}"
       namespace: argocd
