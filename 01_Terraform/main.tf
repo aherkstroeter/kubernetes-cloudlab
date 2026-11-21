@@ -1,17 +1,8 @@
 resource "terraform_data" "lab_inputs" {
   lifecycle {
     precondition {
-      condition = (
-        var.dns_domain == null && length(var.service_hostnames) == 0
-        ) || (
-        var.dns_domain != null &&
-        endswith(var.api_domain, ".${var.dns_domain}") &&
-        alltrue([
-          for name, host in var.service_hostnames :
-          contains(var.service_addresses, name) && endswith(host, ".${var.dns_domain}")
-        ])
-      )
-      error_message = "dns_domain is the zone, such as example.com. api_domain and every service hostname must be inside it, and each service_hostnames key must be a service address name."
+      condition     = var.dns_domain == null || endswith(var.api_domain, ".${var.dns_domain}")
+      error_message = "dns_domain is the zone, such as example.com. api_domain must be a name inside it."
     }
   }
 }
@@ -84,17 +75,6 @@ module "cluster" {
   bootstrap             = local.bootstrap
 
   depends_on = [terraform_data.lab_inputs]
-}
-
-module "lab_dns_records" {
-  source = "./modules/lab_dns_records"
-
-  enabled           = var.dns_domain != null
-  zone_name         = module.lab_dns.zone_name
-  api_domain        = var.api_domain
-  api_address       = module.cluster.api_address
-  service_hostnames = var.service_hostnames
-  service_addresses = module.cluster.service_addresses
 }
 
 module "github_hooks" {

@@ -115,13 +115,7 @@ variable "install_argocd" {
 variable "dns_domain" {
   type        = string
   default     = null
-  description = "Existing public Cloud DNS zone, such as example.com. Null skips DNS. The zone is not created here. api_domain and service_hostnames must be names inside it."
-}
-
-variable "service_hostnames" {
-  type        = map(string)
-  default     = {}
-  description = "Service address name to hostname. Each name gets an A record at that floating address."
+  description = "Existing public Cloud DNS zone, such as example.com. Null skips DNS. The zone is not created here. api_domain must be a name inside it. external-dns publishes the records."
 }
 
 variable "bootstrap" {

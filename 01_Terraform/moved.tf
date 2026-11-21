@@ -14,16 +14,6 @@ moved {
 }
 
 moved {
-  from = google_dns_record_set.api
-  to   = module.lab_dns_records.google_dns_record_set.api
-}
-
-moved {
-  from = google_dns_record_set.service
-  to   = module.lab_dns_records.google_dns_record_set.service
-}
-
-moved {
   from = google_compute_firewall.github_hooks
   to   = module.github_hooks.google_compute_firewall.hooks
 }

@@ -11,8 +11,8 @@ disk_type     = "pd-standard"
 api_domain = "api.example.com"
 
 # One MetalLB address, plus the API address which is not part of that pool.
-# Another name, such as gateway, is a second floating address. Leave its hostname
-# out of service_hostnames when external-dns publishes that name.
+# Another name, such as gateway, is a second floating address. Leave that Service
+# without a hostname annotation when it should not be a DNS name.
 # The pool itself is 01_Terraform/pools, applied after the API and MetalLB CRDs exist.
 service_addresses = ["lb-0"]
 
@@ -35,9 +35,8 @@ service_addresses = ["lb-0"]
 
 # dns_domain selects an existing Cloud DNS zone. This project does not create the zone.
 # 01_Terraform/api_dns publishes api_domain after the API and the DNSEndpoint CRD exist.
-# service_hostnames still creates A records until external-dns publishes those names.
+# Echo is published by the hostname annotation on its Service.
 # dns_domain = "example.com"
-# service_hostnames = { lb-0 = "echo.lab.example.com" }
 
 # A custom bootstrap runs as well. manifest_urls must be public https.
 # resourceExclusionsAdditional keeps Argo CD from taking the Terraform-owned MetalLB pool.
