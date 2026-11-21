@@ -26,17 +26,18 @@ service_addresses = ["lb-0"]
 # assign_public_ip = false
 # enable_nat       = true
 
-# install_argocd installs the Argo CD Helm chart on the first boot and applies
-# 02_ArgoCD/bootstrap/root-app.yaml. Later boots leave that release for Argo CD.
-# The root app applies 02_ArgoCD/appsets, and that ApplicationSet installs the platform and workload apps. Leave bootstrap null when this is true.
-# The repo is public: https://github.com/aherkstroeter/kubernetes-cloudlab.git. Argo CD clones it over HTTPS.
+# install_argocd clones the public repo and helm upgrade --installs
+# 02_ArgoCD/02_platform/argocd/values.yaml, then applies 02_ArgoCD/bootstrap/root-app.yaml.
+# A cluster that already matches that file does not change. An extra bootstrap still runs after it.
+# The repo is public: https://github.com/aherkstroeter/kubernetes-cloudlab.git.
 # install_argocd = true
 
-# Cloud DNS for the whole domain. Point the registrar nameservers at the dns_name_servers output.
+# dns_domain selects an existing Cloud DNS zone. This project does not create the zone.
+# service_hostnames still creates A records until external-dns publishes those names.
 # dns_domain = "example.com"
 # service_hostnames = { lb-0 = "echo.lab.example.com" }
 
-# A custom bootstrap still works when install_argocd is false. manifest_urls must be public https.
+# A custom bootstrap runs as well. manifest_urls must be public https.
 # resourceExclusionsAdditional keeps Argo CD from taking the Terraform-owned MetalLB pool.
 #
 # bootstrap = {

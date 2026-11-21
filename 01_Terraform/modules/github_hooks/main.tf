@@ -5,7 +5,7 @@
 # and it does not replace the client rule.
 
 data "http" "github_meta" {
-  count = var.allow_github_webhooks ? 1 : 0
+  count = var.enabled ? 1 : 0
 
   url = "https://api.github.com/meta"
 
@@ -23,17 +23,17 @@ data "http" "github_meta" {
 }
 
 locals {
-  github_hook_ipv4 = var.allow_github_webhooks ? [
+  github_hook_ipv4 = var.enabled ? [
     for cidr in jsondecode(data.http.github_meta[0].response_body).hooks : cidr
     if can(regex("^[0-9.]+/[0-9]+$", cidr))
   ] : []
 }
 
-resource "google_compute_firewall" "github_hooks" {
-  count = var.allow_github_webhooks ? 1 : 0
+resource "google_compute_firewall" "hooks" {
+  count = var.enabled ? 1 : 0
 
   name          = "${var.cluster_name}-github-hooks"
-  network       = module.cluster.network_name
+  network       = var.network_name
   direction     = "INGRESS"
   source_ranges = local.github_hook_ipv4
   target_tags   = [var.cluster_name]

@@ -1,0 +1,52 @@
+# Installs Argo CD from the production values in the public cluster repo.
+# helm upgrade --install is safe to repeat: a release that already matches
+# those values does not change. Secret values in that file stay empty, so the
+# chart omits its secret data block and leaves out-of-band keys in place.
+install -d -m 0700 /var/lib/bootstrap
+export DEBIAN_FRONTEND=noninteractive
+export GIT_TERMINAL_PROMPT=0
+if ! command -v git >/dev/null 2>&1; then
+  apt-get update -qq
+  apt-get install -y -qq git ca-certificates
+fi
+if ! command -v helm >/dev/null 2>&1; then
+  curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+fi
+
+repo=/var/lib/bootstrap/kubernetes-cloudlab
+if [[ ! -d "$${repo}/.git" ]]; then
+  rm -rf "$${repo}"
+  git clone --depth 1 --branch '${repo_ref}' '${repo_url}' "$${repo}"
+else
+  git -C "$${repo}" remote set-url origin '${repo_url}'
+  git -C "$${repo}" fetch --depth 1 origin '${repo_ref}'
+  git -C "$${repo}" checkout --detach --force FETCH_HEAD
+fi
+
+helm repo add --force-update jetstack https://charts.jetstack.io
+helm repo add --force-update argo '${chart_repository}'
+helm repo update
+
+# k3s already includes Gateway API, so HTTPRoute and ListenerSet exist.
+# The production values also create a cert-manager Certificate. Apply those
+# CRDs first. The cert-manager app installs this chart later, and Helm skips
+# CRDs that are already present.
+if ! k3s kubectl get crd certificates.cert-manager.io issuers.cert-manager.io clusterissuers.cert-manager.io certificaterequests.cert-manager.io >/dev/null 2>&1; then
+  helm show crds jetstack/cert-manager --version '${cert_manager_version}' \
+    | k3s kubectl apply --server-side --force-conflicts -f -
+fi
+
+helm upgrade --install '${release_name}' 'argo/${chart_name}' \
+  --version '${chart_version}' \
+  --namespace '${namespace}' \
+  --create-namespace \
+  -f "$${repo}/${values_path}" \
+  --wait --timeout 10m
+
+k3s kubectl -n '${namespace}' delete secret repo-kubernetes-cloudlab --ignore-not-found
+k3s kubectl -n '${namespace}' create secret generic repo-kubernetes-cloudlab \
+  --from-literal=type=git \
+  --from-literal=url='${repo_url}'
+k3s kubectl -n '${namespace}' label secret repo-kubernetes-cloudlab \
+  argocd.argoproj.io/secret-type=repository --overwrite
+k3s kubectl apply -f "$${repo}/${root_app_path}"

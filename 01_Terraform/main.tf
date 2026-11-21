@@ -1,11 +1,6 @@
 resource "terraform_data" "lab_inputs" {
   lifecycle {
     precondition {
-      condition     = !(var.install_argocd && var.bootstrap != null)
-      error_message = "install_argocd builds the Argo CD bootstrap. Leave bootstrap null when it is true."
-    }
-
-    precondition {
       condition = (
         var.dns_domain == null && length(var.service_hostnames) == 0
         ) || (
@@ -21,44 +16,44 @@ resource "terraform_data" "lab_inputs" {
   }
 }
 
-resource "tls_private_key" "argocd_repo" {
-  count = var.install_argocd ? 1 : 0
+module "lab_dns" {
+  source = "./modules/lab_dns"
 
-  algorithm = "ED25519"
+  project_id   = var.project_id
+  cluster_name = var.cluster_name
+  dns_domain   = var.dns_domain
+
+  depends_on = [terraform_data.lab_inputs]
+}
+
+module "lab_argocd" {
+  source = "./modules/lab_argocd"
+
+  install = var.install_argocd
 }
 
 locals {
-  argocd_values = <<-EOT
-    dex:
-      enabled: false
-    notifications:
-      enabled: false
-    configs:
-      cm:
-        resourceExclusionsAdditional:
-          - apiGroups:
-              - metallb.io
-            kinds:
-              - IPAddressPool
-              - L2Advertisement
-            clusters:
-              - "*"
-  EOT
+  user_bootstrap   = var.bootstrap
+  argocd_bootstrap = module.lab_argocd.bootstrap
 
-  bootstrap = var.install_argocd ? {
-    manifest_urls = []
-    helm_releases = [{
-      name        = "argocd"
-      repository  = "https://argoproj.github.io/argo-helm"
-      chart       = "argo-cd"
-      version     = "10.18.2"
-      namespace   = "argocd"
-      values_yaml = local.argocd_values
-    }]
-    script = templatefile("${path.module}/templates/argocd-bootstrap.sh.tftpl", {
-      root_app = file("${path.module}/../02_ArgoCD/bootstrap/root-app.yaml")
-    })
-  } : var.bootstrap
+  # install_argocd and an extra bootstrap both run. Argo CD is installed from
+  # the production values, then the extra manifests and script.
+  bootstrap = (
+    local.argocd_bootstrap == null && local.user_bootstrap == null ? null : {
+      manifest_urls = concat(
+        try(local.argocd_bootstrap.manifest_urls, []),
+        try(local.user_bootstrap.manifest_urls, []),
+      )
+      helm_releases = concat(
+        try(local.argocd_bootstrap.helm_releases, []),
+        try(local.user_bootstrap.helm_releases, []),
+      )
+      script = join("\n", compact([
+        trimspace(try(local.argocd_bootstrap.script, "")),
+        trimspace(try(local.user_bootstrap.script, "")),
+      ]))
+    }
+  )
 }
 
 module "cluster" {
@@ -83,10 +78,29 @@ module "cluster" {
   subnet_cidr           = var.subnet_cidr
   assign_public_ip      = var.assign_public_ip
   enable_nat            = var.enable_nat
-  service_account_email = one(google_service_account.nodes[*].email)
+  service_account_email = module.lab_dns.service_account_email
   k3s_channel           = var.k3s_channel
   ssh_source_ranges     = var.ssh_source_ranges
   bootstrap             = local.bootstrap
 
   depends_on = [terraform_data.lab_inputs]
+}
+
+module "lab_dns_records" {
+  source = "./modules/lab_dns_records"
+
+  enabled           = var.dns_domain != null
+  zone_name         = module.lab_dns.zone_name
+  api_domain        = var.api_domain
+  api_address       = module.cluster.api_address
+  service_hostnames = var.service_hostnames
+  service_addresses = module.cluster.service_addresses
+}
+
+module "github_hooks" {
+  source = "./modules/github_hooks"
+
+  enabled      = var.allow_github_webhooks
+  cluster_name = var.cluster_name
+  network_name = module.cluster.network_name
 }

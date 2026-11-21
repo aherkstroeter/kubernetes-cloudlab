@@ -109,13 +109,13 @@ variable "ssh_source_ranges" {
 variable "install_argocd" {
   type        = bool
   default     = false
-  description = "Install Argo CD with Helm and apply the root app. Leave bootstrap null when this is true."
+  description = "Helm-install Argo CD from 02_ArgoCD/02_platform/argocd/values.yaml and apply the root app. An extra bootstrap still runs after that."
 }
 
 variable "dns_domain" {
   type        = string
   default     = null
-  description = "Public Cloud DNS zone, such as example.com. Null skips DNS. api_domain and service_hostnames must be names inside it."
+  description = "Existing public Cloud DNS zone, such as example.com. Null skips DNS. The zone is not created here. api_domain and service_hostnames must be names inside it."
 }
 
 variable "service_hostnames" {
