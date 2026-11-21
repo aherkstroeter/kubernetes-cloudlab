@@ -33,10 +33,7 @@ helm repo add --force-update bootstrap-${idx} '${replace(release.repository, "'"
 %{ endfor ~}
 helm repo update
 %{ for idx, release in helm_releases ~}
-# The first boot installs the release. Later boots leave it, so the cluster can manage upgrades.
-if helm status '${replace(release.name, "'", "'\\''")}' --namespace '${replace(release.namespace, "'", "'\\''")}' >/dev/null 2>&1; then
-  echo "helm release ${replace(release.name, "'", "'\\''")} already exists; leaving it for the cluster to manage"
-else
+# Repeatable. A release that already matches these values does not change.
 helm upgrade --install '${replace(release.name, "'", "'\\''")}' \
   'bootstrap-${idx}/${replace(release.chart, "'", "'\\''")}' \
   --namespace '${replace(release.namespace, "'", "'\\''")}' \
@@ -48,7 +45,6 @@ helm upgrade --install '${replace(release.name, "'", "'\\''")}' \
   -f /var/lib/bootstrap/helm-${idx}.yaml \
 %{ endif ~}
   --wait --timeout 10m
-fi
 %{ endfor ~}
 %{ endif ~}
 

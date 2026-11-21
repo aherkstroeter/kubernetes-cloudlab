@@ -10,7 +10,7 @@ variable "manifest_urls" {
 }
 
 variable "helm_releases" {
-  description = "Helm releases installed before manifests. version empty or null tracks the chart's latest. values_yaml is written to a root-only file on the node."
+  description = "Helm releases installed before manifests. helm upgrade --install runs on every boot, so a release that already matches these values does not change. version empty or null tracks the chart's latest. values_yaml is written to a root-only file on the node."
   type = list(object({
     name        = string
     repository  = string

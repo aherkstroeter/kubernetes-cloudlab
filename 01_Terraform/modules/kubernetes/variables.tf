@@ -203,7 +203,7 @@ variable "ssh_source_ranges" {
 }
 
 variable "bootstrap" {
-  description = "Optional installer that runs on the primary after k3s is up. Pass manifest URLs, Helm releases, a shell script, or any combination. Helm runs first, then manifests in list order, then the script. Use this to install Argo CD and an app that syncs your repo. Terraform does not manage objects inside the cluster after that. The script runs with set -euo pipefail, and the whole bootstrap runs again on every boot, so it must be idempotent."
+  description = "Optional installer that runs on the primary after k3s is up. Pass manifest URLs, Helm releases, a shell script, or any combination. Helm upgrade --install runs first, then manifests in list order, then the script. A release that already matches its values does not change. Terraform does not manage objects inside the cluster after that. The script runs with set -euo pipefail, and the whole bootstrap runs again on every boot, so it must be idempotent."
   type = object({
     manifest_urls = optional(list(string), [])
     helm_releases = optional(list(object({
