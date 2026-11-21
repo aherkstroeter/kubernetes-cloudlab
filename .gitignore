@@ -13,3 +13,12 @@
 .terraform.lock.hcl
 .terraform.tfstate.lock.info
 00_Obsidian/
+
+# Site build
+site/node_modules/
+site/public/
+site/public-empty/
+site/public-fixture/
+site/.build/
+site/resources/
+site/.hugo_build.lock
