@@ -111,9 +111,11 @@ locals {
   # One switch for every object that needs the API. Unset it only on the apply
   # that creates the cluster. Unsetting it later plans a destroy of these objects.
   manage_cluster_objects = var.kubeconfig_path != null
+  # one() of a count-0 data source is null. length(null) errors, and try()
+  # only catches that when it wraps length(), not one().
   metallb_crds_ready = (
-    length(try(one(data.kubernetes_resources.ipaddresspools[*].objects), [])) == 1 &&
-    length(try(one(data.kubernetes_resources.l2advertisements[*].objects), [])) == 1
+    try(length(one(data.kubernetes_resources.ipaddresspools[*].objects)), 0) == 1 &&
+    try(length(one(data.kubernetes_resources.l2advertisements[*].objects)), 0) == 1
   )
   pool_manifests = local.manage_cluster_objects && local.metallb_crds_ready && module.metallb_pool.ip_address_pool != null ? {
     public = module.metallb_pool.ip_address_pool
@@ -187,7 +189,7 @@ module "api_endpoint" {
 # A record, because its policy is sync.
 locals {
   dnsendpoint_ready = (
-    length(try(one(data.kubernetes_resources.dnsendpoints[*].objects), [])) == 1
+    try(length(one(data.kubernetes_resources.dnsendpoints[*].objects)), 0) == 1
   )
   api_manifests = local.manage_cluster_objects && local.dnsendpoint_ready && module.api_endpoint.manifest != null ? {
     api = module.api_endpoint.manifest
