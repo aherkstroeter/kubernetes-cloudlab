@@ -1,0 +1,15 @@
+name: external-secrets
+project: platform
+namespace: external-secrets
+wave: "-1"
+syncOptions:
+  - CreateNamespace=true
+  - ServerSideApply=true
+sources:
+  - repoURL: https://charts.external-secrets.io
+    chart: external-secrets
+    targetRevision: 2.15.0
+    helm:
+      releaseName: external-secrets
+      valueFiles:
+        - values.yaml

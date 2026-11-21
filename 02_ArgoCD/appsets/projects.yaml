@@ -6,13 +6,14 @@ metadata:
   annotations:
     argocd.argoproj.io/sync-wave: "-1"
 spec:
-  description: Cluster platform. Networking, certificates, DNS, and Argo CD.
+  description: Cluster platform. Networking, certificates, DNS, secrets, and Argo CD.
   sourceRepos:
     - https://github.com/aherkstroeter/kubernetes-cloudlab.git
     - https://kube-vip.github.io/helm-charts
     - https://metallb.github.io/metallb
     - https://charts.jetstack.io
     - https://kubernetes-sigs.github.io/external-dns/
+    - https://charts.external-secrets.io
     - https://argoproj.github.io/argo-helm
     - docker.io/envoyproxy
   destinations:
@@ -28,6 +29,8 @@ spec:
       namespace: envoy-gateway-system
     - server: https://kubernetes.default.svc
       namespace: external-dns
+    - server: https://kubernetes.default.svc
+      namespace: external-secrets
   clusterResourceWhitelist:
     - group: "*"
       kind: "*"
