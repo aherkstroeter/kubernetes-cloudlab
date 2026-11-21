@@ -1,0 +1,14 @@
+# The shared passthrough rule health-checks TCP 6443 and can deliver a
+# connection to any server. Envoy's default Local policy drops that connection
+# on a node that is not running the proxy pod, so about one in three public
+# connections never arrives. Cluster policy forwards them.
+apiVersion: gateway.envoyproxy.io/v1alpha1
+kind: EnvoyProxy
+metadata:
+  name: lab
+spec:
+  provider:
+    type: Kubernetes
+    kubernetes:
+      envoyService:
+        externalTrafficPolicy: Cluster
