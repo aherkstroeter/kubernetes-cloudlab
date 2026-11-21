@@ -1,3 +1,8 @@
+# lab_dns, the VMs, and the GitHub hook firewall do not need the Kubernetes API.
+# The MetalLB pool and the API DNSEndpoint do. They enter the plan only when
+# kubeconfig_path is set and the CRDs already exist. The apply that creates
+# the VMs leaves that variable unset, then a second apply adds those objects.
+
 resource "terraform_data" "lab_inputs" {
   lifecycle {
     precondition {
