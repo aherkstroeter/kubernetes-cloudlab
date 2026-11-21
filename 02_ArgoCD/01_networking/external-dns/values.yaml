@@ -258,9 +258,11 @@ txtPrefix:  # @schema type:[string, null]; default: null
 txtSuffix:  # @schema type:[string, null]; default: null
 
 # -- Limit possible target zones by domain suffixes.
-# lab: suffix match. api.lab and echo.lab also match; the TXT owner id keeps them.
+# lab: the managed zone is anselmherkstroeter.com. A filter of lab.anselmherkstroeter.com
+# does not match that zone, so external-dns lists nothing and writes nothing.
+# TXT ownership still leaves the Terraform api.lab and echo.lab records alone.
 domainFilters:
-  - lab.anselmherkstroeter.com
+  - anselmherkstroeter.com
 
 # -- Intentionally exclude domains from being managed.
 excludeDomains: []
