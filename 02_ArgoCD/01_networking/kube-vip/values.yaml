@@ -1,19 +1,12 @@
-# Default values for kube-vip.
-# This is a YAML-formatted file.
-# Declare variables to be passed into your templates.
-# lab: chart 0.11.2. Image is pinned to v1.3.2 because the chart appVersion is v1.2.4.
-# lab: config.address is a placeholder. The chart copies it to vip_address when cp_enable
-# is true. env address is set from ConfigMap lab-addresses key apiAddress, and kube-vip
-# uses that when it is present. The pod does not start if the ConfigMap key is missing.
+# kube-vip 0.11.2. The image is pinned to v1.3.2 because the chart appVersion is v1.2.4.
+# config.address is a placeholder. The chart copies it into the pod when control-plane
+# mode is on. The address that is used comes from ConfigMap lab-addresses.
 image:
-  repository: ghcr.io/kube-vip/kube-vip
-  pullPolicy: IfNotPresent
   tag: "v1.3.2"
 
 config:
   address: "from-configmap"
 
-# Check https://kube-vip.io/docs/installation/flags/
 env:
   vip_interface: "lo"
   vip_arp: "false"
@@ -26,18 +19,10 @@ env:
   vip_renewdeadline: "3"
   vip_retryperiod: "1"
   lb_enable: "false"
-  lb_port: "6443"
   cp_enable: "true"
   cp_namespace: "kube-system"
   svc_enable: "false"
-  svc_election: "false"
   port: "6443"
-  prometheus_server: ":2112"
-
-extraArgs: {}
-  # Specify additional arguments to kube-vip
-  # For example, to change the Prometheus HTTP server port, use the following:
-  # prometheusHTTPServer: "0.0.0.0:2112"
 
 envValueFrom:
   address:
@@ -45,98 +30,20 @@ envValueFrom:
       name: lab-addresses
       key: apiAddress
 
-envFrom: []
-  # Specify an externally created Secret(s) or ConfigMap(s) to inject environment variables
-  # For example an externally provisioned secret could contain the password for your upstream BGP router, such as
-  #
-  # apiVersion: v1
-  # data:
-  #   bgp_peers: "<address:AS:password:multihop>"
-  # kind: Secret
-  #   name: kube-vip
-  #   namespace: kube-system
-  # type: Opaque
-  #
-  # - secretKeyRef:
-  #    name: kube-vip
-
-extraLabels: {}
-  # Specify extra labels to be added to DaemonSet (and therefore to Pods)
-
-annotations: {}
-  # Specify annotations to be added to DaemonSet
-
-imagePullSecrets: []
-nameOverride: ""
-fullnameOverride: ""
-# Custom namespace to override the namespace for the deployed resources.
-namespaceOverride: ""
-
-serviceAccount:
-  # Specifies whether a service account should be created
-  create: true
-  # Annotations to add to the service account
-  annotations: {}
-  # The name of the service account to use.
-  # If not set and create is true, a name is generated using the fullname template
-  name: ""
-
-podAnnotations: {}
-
-podSecurityContext: {}
-# fsGroup: 2000
-
 securityContext:
   capabilities:
     add:
       - NET_ADMIN
       - NET_RAW
       - SYS_TIME
-    drop:
-      - ALL
 
-updateStrategy:
-  type: RollingUpdate
-  rollingUpdate:
-    maxUnavailable: 1
-
-resources: {}
-  # We usually recommend not to specify default resources and to leave this as a conscious
-  # choice for the user. This also increases chances charts run on environments with little
-  # resources, such as Minikube. If you do want to specify resources, uncomment the following
-  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
-  # limits:
-  #   cpu: 100m
-  #   memory: 128Mi
-  # requests:
-  #   cpu: 100m
-  #   memory: 128Mi
-
-volumes: []
-  # Specify additional volumes
-  #   - hostPath:
-  #       path: /etc/rancher/k3s/k3s.yaml
-  #       type: File
-  #     name: kubeconfig
-
-volumeMounts: []
-  # Specify additional volume mounts
-  # - mountPath: /etc/kubernetes/admin.conf
-  #   name: kubeconfig
-
-hostAliases: []
-  # Specify additional host aliases
-  # - hostnames:
-  #     - kubernetes
-  #   ip: 127.0.0.1
-
-nodeSelector: {}
-
+# Control-plane nodes only. The tolerations cover a control-plane taint and a NoExecute taint.
 tolerations:
   - effect: NoSchedule
     operator: Exists
   - effect: NoExecute
     operator: Exists
+
 affinity:
   nodeAffinity:
     requiredDuringSchedulingIgnoredDuringExecution:
@@ -147,10 +54,3 @@ affinity:
         - matchExpressions:
             - key: node-role.kubernetes.io/master
               operator: Exists
-
-podMonitor:
-  enabled: false
-  labels: {}
-  annotations: {}
-
-priorityClassName: ""
