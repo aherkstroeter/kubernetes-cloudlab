@@ -76,6 +76,18 @@ variable "service_addresses" {
   default = ["lb-0"]
 }
 
+variable "kubeconfig_path" {
+  type        = string
+  default     = null
+  description = "Kubeconfig used to apply the MetalLB pool. Null skips the pool so this configuration can create the cluster before the API exists. Set it and apply again once the MetalLB CRDs exist. The provider does not read KUBECONFIG."
+}
+
+variable "kubeconfig_context" {
+  type        = string
+  default     = null
+  description = "Context inside kubeconfig_path. Required when kubeconfig_path is set."
+}
+
 variable "extra_server_args" {
   type    = list(string)
   default = ["--disable=servicelb", "--disable=traefik"]

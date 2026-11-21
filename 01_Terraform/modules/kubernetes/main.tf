@@ -121,8 +121,8 @@ module "bootstrap" {
 
   manifest_urls = local.bootstrap_manifest_urls
   helm_releases = local.bootstrap_helm_releases
-  # The ConfigMap has to exist before kube-vip starts. MetalLB pools are a
-  # separate apply against a running cluster, so boot does not wait on CRDs.
+  # The ConfigMap has to exist before kube-vip starts. The root applies the
+  # MetalLB pool after the CRDs exist. Boot does not wait for them.
   script = join("\n", compact([
     trimspace(templatefile("${path.module}/templates/configmap.sh.tftpl", {
       api_address = module.addresses.addresses["api"].address

@@ -4,6 +4,11 @@ resource "terraform_data" "lab_inputs" {
       condition     = var.dns_domain == null || endswith(var.api_domain, ".${var.dns_domain}")
       error_message = "dns_domain is the zone, such as example.com. api_domain must be a name inside it."
     }
+
+    precondition {
+      condition     = var.kubeconfig_path == null || var.kubeconfig_context != null
+      error_message = "kubeconfig_context is required when kubeconfig_path is set."
+    }
   }
 }
 
@@ -89,4 +94,81 @@ module "github_hooks" {
   enabled      = var.allow_github_webhooks
   cluster_name = var.cluster_name
   network_name = module.cluster.network_name
+}
+
+module "metallb_pool" {
+  source = "./modules/metallb_pool"
+
+  # values() is lexicographic by key. The module sorts the /32s.
+  # The API address is not in this map.
+  addresses = values(module.cluster.service_addresses)
+}
+
+# kubernetes_manifest reads the CRD schema during plan. depends_on and the
+# wait block cannot see a CRD that Argo CD installs after this plan was built,
+# so the pool is absent until kubeconfig_path is set and both CRDs are present.
+locals {
+  manage_pools = var.kubeconfig_path != null
+  metallb_crds_ready = (
+    length(try(one(data.kubernetes_resources.ipaddresspools[*].objects), [])) == 1 &&
+    length(try(one(data.kubernetes_resources.l2advertisements[*].objects), [])) == 1
+  )
+  pool_manifests = local.manage_pools && local.metallb_crds_ready && module.metallb_pool.ip_address_pool != null ? {
+    public = module.metallb_pool.ip_address_pool
+  } : {}
+  advertisement_manifests = local.manage_pools && local.metallb_crds_ready && module.metallb_pool.l2_advertisement != null ? {
+    public = module.metallb_pool.l2_advertisement
+  } : {}
+}
+
+data "kubernetes_resources" "ipaddresspools" {
+  count = local.manage_pools ? 1 : 0
+
+  api_version    = "apiextensions.k8s.io/v1"
+  kind           = "CustomResourceDefinition"
+  field_selector = "metadata.name=ipaddresspools.metallb.io"
+}
+
+data "kubernetes_resources" "l2advertisements" {
+  count = local.manage_pools ? 1 : 0
+
+  api_version    = "apiextensions.k8s.io/v1"
+  kind           = "CustomResourceDefinition"
+  field_selector = "metadata.name=l2advertisements.metallb.io"
+}
+
+resource "terraform_data" "metallb_pool_ready" {
+  count = local.manage_pools ? 1 : 0
+
+  lifecycle {
+    precondition {
+      condition     = local.metallb_crds_ready
+      error_message = "MetalLB CRDs are not on the API yet. Re-run terraform apply when ipaddresspools.metallb.io and l2advertisements.metallb.io exist. This plan cannot wait for them."
+    }
+  }
+}
+
+resource "kubernetes_manifest" "ip_address_pool" {
+  for_each = local.pool_manifests
+
+  manifest        = each.value
+  computed_fields = ["status"]
+
+  depends_on = [terraform_data.metallb_pool_ready]
+}
+
+resource "kubernetes_manifest" "l2_advertisement" {
+  for_each = local.advertisement_manifests
+
+  manifest        = each.value
+  computed_fields = ["status"]
+
+  depends_on = [terraform_data.metallb_pool_ready]
+}
+
+check "metallb_pool" {
+  assert {
+    condition     = local.manage_pools
+    error_message = "The MetalLB pool is skipped. Set kubeconfig_path after the MetalLB CRDs exist and apply again."
+  }
 }

@@ -13,7 +13,9 @@ api_domain = "api.example.com"
 # One MetalLB address, plus the API address which is not part of that pool.
 # Another name, such as gateway, is a second floating address. Leave that Service
 # without a hostname annotation when it should not be a DNS name.
-# The pool itself is 01_Terraform/pools, applied after the API and MetalLB CRDs exist.
+# The pool is applied by this same configuration once kubeconfig_path is set
+# and the MetalLB CRDs exist. Leave kubeconfig_path unset on the apply that
+# creates the cluster. Terraform cannot wait for those CRDs inside that plan.
 service_addresses = ["lb-0"]
 
 # Who may open the public API and the service addresses. Empty creates no client rule.
@@ -37,6 +39,9 @@ service_addresses = ["lb-0"]
 # 01_Terraform/api_dns publishes api_domain after the API and the DNSEndpoint CRD exist.
 # Echo is published by the hostname annotation on its Service.
 # dns_domain = "example.com"
+
+# kubeconfig_path    = "/path/to/kubeconfig"
+# kubeconfig_context = "homelab"
 
 # A custom bootstrap runs as well. manifest_urls must be public https.
 # resourceExclusionsAdditional keeps Argo CD from taking the Terraform-owned MetalLB pool.

@@ -1,4 +1,4 @@
-# lab: upstream defaults for metallb 0.16.2, unchanged. The IPAddressPool is applied by 01_Terraform/pools after the cluster is up.
+# lab: upstream defaults for metallb 0.16.2, unchanged. The IPAddressPool is applied by the Terraform root after the MetalLB CRDs exist.
 # Default values for metallb.
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
