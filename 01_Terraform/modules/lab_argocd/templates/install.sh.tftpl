@@ -28,12 +28,26 @@ helm repo add --force-update argo '${chart_repository}'
 helm repo update
 
 # k3s already includes Gateway API, so HTTPRoute and ListenerSet exist.
-# The production values also create a cert-manager Certificate. Apply those
-# CRDs first. The cert-manager app installs this chart later, and Helm skips
-# CRDs that are already present.
+# The Argo CD chart renders a cert-manager Certificate. That CRD has to exist
+# before Helm installs Argo CD. cert-manager v1.21.3 ships those CRDs as
+# templates (crds.enabled), not in crds/, so `helm show crds` is empty.
 if ! k3s kubectl get crd certificates.cert-manager.io issuers.cert-manager.io clusterissuers.cert-manager.io certificaterequests.cert-manager.io >/dev/null 2>&1; then
-  helm show crds jetstack/cert-manager --version '${cert_manager_version}' \
+  work=$(mktemp -d)
+  helm pull jetstack/cert-manager --version '${cert_manager_version}' --untar --destination "$${work}"
+  show_only=()
+  for path in "$${work}/cert-manager/templates"/crd-*.yaml; do
+    show_only+=(--show-only "templates/$${path##*/}")
+  done
+  if (( $${#show_only[@]} == 0 )); then
+    echo "cert-manager chart has no CRD templates" >&2
+    exit 1
+  fi
+  helm template cert-manager-crds "$${work}/cert-manager" \
+    --set crds.enabled=true \
+    --set crds.keep=true \
+    "$${show_only[@]}" \
     | k3s kubectl apply --server-side --force-conflicts -f -
+  rm -rf "$${work}"
 fi
 
 helm upgrade --install '${release_name}' 'argo/${chart_name}' \
