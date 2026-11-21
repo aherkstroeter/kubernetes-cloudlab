@@ -236,19 +236,27 @@ gatewayNamespace:  # @schema type:[string, null]; default: null
 sourceNamespace:  # @schema type:[string, null]; default: null
 
 # -- _Kubernetes_ resources to monitor for DNS entries.
-# lab: Gateway API HTTPRoutes only. Terraform owns the api and echo records.
+# lab: Services that set external-dns.alpha.kubernetes.io/hostname, Gateway
+# HTTPRoutes, and DNSEndpoint objects. The API name is a DNSEndpoint because it
+# is not a Service. The gateway Service has no hostname annotation, so it is
+# not published.
 sources:
+  - service
   - gateway-httproute
+  - crd
 
 # -- (REQUIRED) How DNS records are synchronized between sources and providers; must be set explicitly to one of `create-only`, `sync`, or `upsert-only`.
-# lab: sync, so a removed HTTPRoute drops its record. TXT ownership protects Terraform records.
+# lab: sync, so a removed source drops its record.
 policy: sync
 
 # -- Specify the registry for storing ownership and labels.
 # Valid values are `txt`, `aws-sd`, `crd`, `dynamodb` & `noop`.
 registry: txt  # @schema enum:[txt, aws-sd, crd, dynamodb, noop]; default: "txt"
 # -- (string) Specify an identifier for this instance of _ExternalDNS_ when using a registry other than `noop`.
-# lab: records without this owner id, including the Terraform api and echo records, are left alone.
+# lab: owner id stays gcp-k3s-test-cluster across rebuilds, so a record this
+# instance created is adopted again. A record with no TXT for this owner is
+# left alone. Delete that A record when this instance should create it.
+# state rm leaves the A record in Cloud DNS, and external-dns then skips it.
 txtOwnerId: gcp-k3s-test-cluster
 # -- (string) Specify a prefix for the domain names of TXT records created for the `txt` registry.
 # Mutually exclusive with `txtSuffix`.
@@ -260,7 +268,6 @@ txtSuffix:  # @schema type:[string, null]; default: null
 # -- Limit possible target zones by domain suffixes.
 # lab: the managed zone is anselmherkstroeter.com. A filter of lab.anselmherkstroeter.com
 # does not match that zone, so external-dns lists nothing and writes nothing.
-# TXT ownership still leaves the Terraform api.lab and echo.lab records alone.
 domainFilters:
   - anselmherkstroeter.com
 
