@@ -50,7 +50,9 @@ else
 fi
 mkdir -p "$(dirname "$dest")"
 
-work=$(mktemp -d)
+# The merged file is replaced into place. mktemp on /tmp fails that replace
+# when dest is on another filesystem (os.replace returns EXDEV).
+work=$(mktemp -d -p "$(dirname "$dest")" .kubeconfig-work.XXXXXX)
 chmod 700 "$work"
 admin="${work}/admin.yaml"
 backup="${work}/backup.yaml"
