@@ -6,6 +6,8 @@
 01_Terraform/terraform.tfstate.*.backup
 01_Terraform/pools/terraform.tfstate
 01_Terraform/pools/terraform.tfstate.backup
+01_Terraform/api_dns/terraform.tfstate
+01_Terraform/api_dns/terraform.tfstate.backup
 01_Terraform/terraform.tfvars
 01_Terraform/*.auto.tfvars
 .terraform/

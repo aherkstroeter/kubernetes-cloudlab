@@ -34,6 +34,7 @@ service_addresses = ["lb-0"]
 # install_argocd = true
 
 # dns_domain selects an existing Cloud DNS zone. This project does not create the zone.
+# 01_Terraform/api_dns publishes api_domain after the API and the DNSEndpoint CRD exist.
 # service_hostnames still creates A records until external-dns publishes those names.
 # dns_domain = "example.com"
 # service_hostnames = { lb-0 = "echo.lab.example.com" }
