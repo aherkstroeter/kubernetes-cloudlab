@@ -77,11 +77,10 @@ run "scripts" {
       strcontains(output.primary_startup_script, "--disable=traefik") &&
       strcontains(output.primary_startup_script, "ip addr replace '203.0.113.10/32' dev lo") &&
       strcontains(output.primary_startup_script, "name: lab-addresses") &&
-      strcontains(output.primary_startup_script, "kind: IPAddressPool") &&
-      strcontains(output.primary_startup_script, "203.0.113.10/32") &&
-      strcontains(output.primary_startup_script, "kind: L2Advertisement")
+      !strcontains(output.primary_startup_script, "kind: IPAddressPool") &&
+      !strcontains(output.primary_startup_script, "kind: L2Advertisement")
     )
-    error_message = "The primary startup script must disable the bundled load balancers and apply the address pool."
+    error_message = "The primary startup script must disable the bundled load balancers and publish lab-addresses. It must not apply the MetalLB pool."
   }
 }
 

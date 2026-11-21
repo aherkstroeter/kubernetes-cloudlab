@@ -142,7 +142,7 @@ variable "service_source_ranges" {
 }
 
 variable "service_addresses" {
-  description = "Names of regional external addresses for Services of type LoadBalancer. Each becomes a passthrough rule and a /32 in the MetalLB pool. The API address is separate."
+  description = "Names of regional external addresses for Services of type LoadBalancer. Each becomes a passthrough rule. The MetalLB /32 pool is a separate apply against a running cluster. The API address is separate."
   type        = list(string)
   default     = ["lb-0"]
 

@@ -13,6 +13,7 @@ api_domain = "api.example.com"
 # One MetalLB address, plus the API address which is not part of that pool.
 # Another name, such as gateway, is a second floating address. Leave its hostname
 # out of service_hostnames when external-dns publishes that name.
+# The pool itself is 01_Terraform/pools, applied after the API and MetalLB CRDs exist.
 service_addresses = ["lb-0"]
 
 # Who may open the public API and the service addresses. Empty creates no client rule.

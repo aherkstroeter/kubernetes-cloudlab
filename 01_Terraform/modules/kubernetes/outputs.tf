@@ -39,7 +39,7 @@ output "api_domain" {
 }
 
 output "service_addresses" {
-  description = "Public addresses MetalLB may assign to Services of type LoadBalancer, keyed by name."
+  description = "Public addresses for Services of type LoadBalancer, keyed by name. The MetalLB pool that publishes them is applied separately."
   value = {
     for name in var.service_addresses : name => module.addresses.addresses[name].address
   }
