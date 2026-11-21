@@ -79,7 +79,7 @@ variable "service_addresses" {
 variable "kubeconfig_path" {
   type        = string
   default     = null
-  description = "Kubeconfig used to apply the MetalLB pool. Null skips the pool so this configuration can create the cluster before the API exists. Set it and apply again once the MetalLB CRDs exist. The provider does not read KUBECONFIG."
+  description = "Kubeconfig used to apply the MetalLB pool and the API DNSEndpoint. Null skips both so this configuration can create the cluster before the API exists. Set it and apply again once those CRDs exist. The provider does not read KUBECONFIG."
 }
 
 variable "kubeconfig_context" {

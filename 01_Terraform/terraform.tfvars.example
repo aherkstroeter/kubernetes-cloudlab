@@ -36,7 +36,9 @@ service_addresses = ["lb-0"]
 # install_argocd = true
 
 # dns_domain selects an existing Cloud DNS zone. This project does not create the zone.
-# 01_Terraform/api_dns publishes api_domain after the API and the DNSEndpoint CRD exist.
+# This configuration publishes api_domain once kubeconfig_path is set and the
+# DNSEndpoint CRD exists. Leave kubeconfig_path unset on the apply that creates
+# the cluster. Terraform cannot wait for that CRD inside that plan.
 # Echo is published by the hostname annotation on its Service.
 # dns_domain = "example.com"
 
