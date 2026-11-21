@@ -5,7 +5,7 @@ metadata:
   labels:
     app.kubernetes.io/name: echo
   annotations:
-    external-dns.alpha.kubernetes.io/hostname: echo.lab.anselmherkstroeter.com
+    external-dns.kubernetes.io/hostname: echo.lab.anselmherkstroeter.com
 spec:
   type: LoadBalancer
   selector:

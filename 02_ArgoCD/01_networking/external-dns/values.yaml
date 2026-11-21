@@ -236,7 +236,7 @@ gatewayNamespace:  # @schema type:[string, null]; default: null
 sourceNamespace:  # @schema type:[string, null]; default: null
 
 # -- _Kubernetes_ resources to monitor for DNS entries.
-# lab: Services that set external-dns.alpha.kubernetes.io/hostname, Gateway
+# lab: Services that set external-dns.kubernetes.io/hostname, Gateway
 # HTTPRoutes, and DNSEndpoint objects. The API name is a DNSEndpoint because it
 # is not a Service. The gateway Service has no hostname annotation, so it is
 # not published.
