@@ -245,6 +245,20 @@ configs:
     #         orgs:
     #         - name: your-github-org
 
+    # lab: Google login uses Argo CD's own OIDC client. Dex stays off.
+    # The client secret is the argocd-secret key oidc.google.clientSecret, referenced below.
+    # It is patched on the cluster and is not in git. PKCE stays off: this web client has a
+    # secret, and Argo CD omits the secret when PKCE is enabled.
+    oidc.config: |
+      name: Google
+      issuer: https://accounts.google.com
+      clientID: 367834925918-2hg4oi759ggtshcj8bc8thce12ofr0d3.apps.googleusercontent.com
+      clientSecret: $oidc.google.clientSecret
+      requestedScopes:
+        - openid
+        - profile
+        - email
+
     # OIDC configuration as an alternative to dex (optional).
     # oidc.config: |
     #   name: AzureAD
@@ -485,7 +499,9 @@ configs:
 
     # -- File containing user-defined policies and role definitions.
     # @default -- `''` (See [values.yaml])
-    policy.csv: ""
+    # lab: this Gmail account is admin. Other Google accounts get no role.
+    policy.csv: |
+      g, anselmherkstroter@gmail.com, role:admin
     # Policy rules are in the form:
     #  p, subject, resource, action, object, effect
     # Role definitions and bindings are in the form:
@@ -500,7 +516,8 @@ configs:
 
     # -- OIDC scopes to examine during rbac enforcement (in addition to `sub` scope).
     # The scope value can be a string, or a list of strings.
-    scopes: "[groups]"
+    # lab: Google's sub claim is a numeric id. Match the email claim instead.
+    scopes: "[email]"
 
     # -- Matcher function for Casbin, `glob` for glob matcher and `regex` for regex matcher.
     policy.matchMode: "glob"
@@ -1212,7 +1229,7 @@ controller:
 ## Dex
 dex:
   # -- Enable dex
-  # lab: off until a real OIDC client exists. Do not put a client secret in git.
+  # lab: Google login uses Argo CD's own OIDC client. The client secret stays in the cluster, not in git.
   enabled: false
   # -- Dex name
   name: dex-server
