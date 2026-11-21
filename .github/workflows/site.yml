@@ -4,7 +4,7 @@ on:
   push:
     branches: [master]
     paths:
-      - "site/**"
+      - "02_ArgoCD/03_workloads/www/source.txt"
       - ".github/workflows/site.yml"
 
 permissions:
@@ -13,8 +13,6 @@ permissions:
 
 jobs:
   image:
-    # The tag commit changes the Deployment only. GITHUB_TOKEN does not start
-    # another run. This skips that commit if a later path filter includes it.
     if: github.event.head_commit.message != 'MOD set the site image tag'
     runs-on: ubuntu-latest
     steps:
@@ -22,6 +20,19 @@ jobs:
         with:
           ref: master
           fetch-depth: 0
+
+      - name: read the site sha
+        id: source
+        run: |
+          sha=$(tr -d '[:space:]' < 02_ArgoCD/03_workloads/www/source.txt)
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "$sha" | grep -Eq '^[0-9a-f]{40}$'
+
+      - uses: actions/checkout@v4
+        with:
+          repository: aherkstroeter/www
+          ref: ${{ steps.source.outputs.sha }}
+          path: www
 
       - uses: docker/login-action@v3
         with:
@@ -31,16 +42,16 @@ jobs:
 
       - uses: docker/build-push-action@v6
         with:
-          context: site
+          context: www
           push: true
-          tags: ghcr.io/aherkstroeter/www:${{ github.sha }}
+          tags: ghcr.io/aherkstroeter/www:${{ steps.source.outputs.sha }}
 
       - name: set the image tag
         run: |
           git config user.name "Anselm Herkströter"
           git config user.email "anselmherkstroeter@protonmail.com"
           git pull --rebase origin master
-          sed -i -E "s|image: ghcr.io/aherkstroeter/www:.*|image: ghcr.io/aherkstroeter/www:${{ github.sha }}|" \
+          sed -i -E "s|image: ghcr.io/aherkstroeter/www:.*|image: ghcr.io/aherkstroeter/www:${{ steps.source.outputs.sha }}|" \
             02_ArgoCD/03_workloads/www/manifests/deployment.yaml
           if git diff --quiet -- 02_ArgoCD/03_workloads/www/manifests/deployment.yaml; then
             exit 0

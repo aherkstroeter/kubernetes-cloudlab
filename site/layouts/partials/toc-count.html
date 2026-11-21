@@ -1,5 +1,0 @@
-{{- $n := 0 -}}
-{{- range .Fragments.Headings -}}
-  {{- $n = add $n (partial "count-heading.html" .) -}}
-{{- end -}}
-{{- return $n -}}

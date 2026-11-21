@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: www
-          # The site workflow replaces the tag with the commit that built the image.
+          # The site workflow replaces the tag with the www commit that built the image.
           image: ghcr.io/aherkstroeter/www:3cf201fe7e7604b62bd9686b910686018c8bb9b5
           ports:
             - name: http
