@@ -13,3 +13,9 @@ variable "dns_domain" {
   type        = string
   default     = null
 }
+
+variable "secret_ids" {
+  description = "Secret Manager secret ids the node account may read. Empty grants nothing. The containers are created outside this module, and no secret version is stored here."
+  type        = set(string)
+  default     = []
+}

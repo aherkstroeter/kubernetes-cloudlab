@@ -1,10 +1,13 @@
 # The zone itself stays outside this project. Recreating it would drop DNSSEC
 # and publish new nameservers. external-dns writes the records inside it.
-# Pods reach Cloud DNS through the GCE metadata server. k3s is not GKE, so this
-# is not Workload Identity. The account is dedicated to the nodes and has only
-# these DNS roles. The VMs use the cloud-platform access scope; IAM here is the
-# authorization boundary. Attaching the account stops a VM, so that step is not
-# part of an untargeted apply.
+# Pods reach Cloud DNS and Secret Manager through the GCE metadata server.
+# k3s is not GKE, so this is not Workload Identity. The account is dedicated
+# to the nodes. It can edit the lab zone and read the named secrets, and it
+# has no project-wide Secret Manager role. The secret containers are created
+# with gcloud. This module stores no secret version. The VMs use the
+# cloud-platform access scope; IAM here is the authorization boundary.
+# Attaching the account stops a VM, so that step is not part of an untargeted
+# apply. Adding a secret binding does not replace a VM.
 
 locals {
   enabled   = var.dns_domain != null
@@ -47,4 +50,13 @@ resource "google_dns_managed_zone_iam_member" "node_dns_admin" {
   managed_zone = data.google_dns_managed_zone.lab[0].name
   role         = "roles/dns.admin"
   member       = "serviceAccount:${google_service_account.nodes[0].email}"
+}
+
+resource "google_secret_manager_secret_iam_member" "node_accessor" {
+  for_each = local.enabled ? var.secret_ids : toset([])
+
+  project   = var.project_id
+  secret_id = each.value
+  role      = "roles/secretmanager.secretAccessor"
+  member    = "serviceAccount:${google_service_account.nodes[0].email}"
 }

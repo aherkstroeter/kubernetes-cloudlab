@@ -13,6 +13,12 @@ module "lab_dns" {
   project_id   = var.project_id
   cluster_name = var.cluster_name
   dns_domain   = var.dns_domain
+  # Containers are created with gcloud and survive a cluster destroy.
+  # Create each secret before the first apply that grants this binding.
+  secret_ids = [
+    "argocd-oidc-google",
+    "argocd-github-webhook",
+  ]
 
   depends_on = [terraform_data.lab_inputs]
 }
