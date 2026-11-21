@@ -106,10 +106,25 @@ resource "google_compute_instance" "node" {
 
   metadata_startup_script = each.value.startup_script
 
+  # Attaching or changing this account stops the VM. allow_stopping_for_update
+  # stays off so a normal apply cannot stop the control plane in parallel.
+  dynamic "service_account" {
+    for_each = var.service_account_email == null ? [] : [var.service_account_email]
+    content {
+      email  = service_account.value
+      scopes = ["https://www.googleapis.com/auth/cloud-platform"]
+    }
+  }
+
   lifecycle {
     # The image family resolves to the newest build. Ignore it after create so
     # a later plan does not replace the fleet just because Debian published an image.
-    ignore_changes = [boot_disk[0].initialize_params[0].image]
+    # gcloud injects metadata.ssh-keys for OS Login / project SSH. It is not in
+    # this config. Ignoring that one key keeps a later apply from deleting it.
+    ignore_changes = [
+      boot_disk[0].initialize_params[0].image,
+      metadata["ssh-keys"],
+    ]
   }
 
   depends_on = [

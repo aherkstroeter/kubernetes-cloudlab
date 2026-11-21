@@ -83,6 +83,7 @@ module "cluster" {
   subnet_cidr           = var.subnet_cidr
   assign_public_ip      = var.assign_public_ip
   enable_nat            = var.enable_nat
+  service_account_email = one(google_service_account.nodes[*].email)
   k3s_channel           = var.k3s_channel
   ssh_source_ranges     = var.ssh_source_ranges
   bootstrap             = local.bootstrap

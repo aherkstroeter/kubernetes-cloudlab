@@ -178,6 +178,12 @@ variable "assign_public_ip" {
   default     = false
 }
 
+variable "service_account_email" {
+  description = "Service account attached to every node. Null attaches no account. Passed through to the VM module."
+  type        = string
+  default     = null
+}
+
 variable "enable_nat" {
   description = "Cloud NAT for outbound traffic such as the k3s download. Billed per hour while the cluster exists. Required when nodes have no public IP."
   type        = bool

@@ -51,6 +51,12 @@ variable "image_project" {
   default     = "debian-cloud"
 }
 
+variable "service_account_email" {
+  description = "Service account attached to every VM, with the cloud-platform access scope. Null attaches no account. IAM on the account is the authorization boundary. Changing this stops each VM; do not apply it to every node at once."
+  type        = string
+  default     = null
+}
+
 variable "enable_nat" {
   description = "Create a Cloud NAT gateway for outbound traffic. Private nodes need this to reach the internet. The gateway is billed per hour while it exists. This module does not attach public IPs to nodes unless a node sets assign_public_ip."
   type        = bool

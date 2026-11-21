@@ -185,13 +185,14 @@ locals {
 module "vms" {
   source = "../gcp_cluster"
 
-  name           = var.cluster_name
-  region         = var.region
-  zone           = var.zone
-  subnet_cidr    = var.subnet_cidr
-  enable_nat     = var.enable_nat
-  nodes          = local.nodes
-  firewall_rules = local.firewall_rules
+  name                  = var.cluster_name
+  region                = var.region
+  zone                  = var.zone
+  subnet_cidr           = var.subnet_cidr
+  enable_nat            = var.enable_nat
+  service_account_email = var.service_account_email
+  nodes                 = local.nodes
+  firewall_rules        = local.firewall_rules
 }
 
 # One group for every forwarding rule. GCP allows a VM to be in only one
