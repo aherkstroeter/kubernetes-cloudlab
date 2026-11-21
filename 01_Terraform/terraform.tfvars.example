@@ -18,6 +18,10 @@ service_addresses = ["lb-0"]
 # Who may open the public API and the service addresses. Empty creates no client rule.
 # api_source_ranges = ["203.0.113.10/32"]
 
+# GitHub push webhooks use a separate rule: TCP 443 from the hooks list at
+# https://api.github.com/meta. That list is read on apply. Set false to omit it.
+# allow_github_webhooks = true
+
 # Nodes are private. Cloud NAT is on by default so they can download k3s.
 # assign_public_ip = false
 # enable_nat       = true

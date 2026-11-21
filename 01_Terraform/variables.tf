@@ -65,6 +65,12 @@ variable "service_source_ranges" {
   default = null
 }
 
+variable "allow_github_webhooks" {
+  description = "Allow the IPv4 ranges published in the hooks list at https://api.github.com/meta to reach service addresses on TCP 443. The list is read on each apply. The API firewall and the client service rule are unchanged."
+  type        = bool
+  default     = true
+}
+
 variable "service_addresses" {
   type    = list(string)
   default = ["lb-0"]
