@@ -121,9 +121,16 @@ resource "google_compute_instance" "node" {
     # a later plan does not replace the fleet just because Debian published an image.
     # gcloud injects metadata.ssh-keys for OS Login / project SSH. It is not in
     # this config. Ignoring that one key keeps a later apply from deleting it.
+    #
+    # metadata_startup_script forces a new instance. The primary boots with
+    # --cluster-init. Replacing server-0 while the other servers still form a
+    # quorum can start a second etcd. Ignore the script after create. A new
+    # instance, including one created after a real destroy, still receives the
+    # current script. ignore_changes does not apply to create.
     ignore_changes = [
       boot_disk[0].initialize_params[0].image,
       metadata["ssh-keys"],
+      metadata_startup_script,
     ]
   }
 
