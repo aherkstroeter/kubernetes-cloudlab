@@ -99,7 +99,7 @@ check "node_egress" {
 }
 
 module "addresses" {
-  source = "../gcp_address"
+  source = "../gcp_cluster/modules/gcp_address"
 
   region    = var.region
   addresses = local.address_names
@@ -207,7 +207,7 @@ resource "google_compute_instance_group" "nodes" {
 }
 
 module "api_lb" {
-  source = "../gcp_passthrough"
+  source = "../gcp_cluster/modules/gcp_passthrough"
 
   name              = "${var.cluster_name}-api"
   region            = var.region
@@ -218,7 +218,7 @@ module "api_lb" {
 }
 
 module "service_lb" {
-  source   = "../gcp_passthrough"
+  source   = "../gcp_cluster/modules/gcp_passthrough"
   for_each = toset(var.service_addresses)
 
   name              = "${var.cluster_name}-${each.key}"
