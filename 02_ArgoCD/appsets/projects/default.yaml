@@ -1,0 +1,20 @@
+# Permits nothing. Argo CD recreates an open default project when this object is missing.
+# An empty namespaceResourceWhitelist still allows every namespaced kind, so the
+# deny is namespaceResourceBlacklist. Cluster kinds are allow-listed, so the empty
+# clusterResourceWhitelist denies them.
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: default
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "-1"
+spec:
+  description: Permits nothing. Argo CD recreates an open default project when this object is missing.
+  sourceRepos: []
+  sourceNamespaces: []
+  destinations: []
+  clusterResourceWhitelist: []
+  namespaceResourceBlacklist:
+    - group: "*"
+      kind: "*"

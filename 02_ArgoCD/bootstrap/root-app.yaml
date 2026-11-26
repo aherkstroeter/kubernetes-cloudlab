@@ -6,11 +6,15 @@ metadata:
   finalizers:
     - resources-finalizer.argocd.argoproj.io
 spec:
-  project: default
+  project: platform
   source:
     repoURL: https://github.com/aherkstroeter/kubernetes-cloudlab.git
     targetRevision: master
     path: 02_ArgoCD/appsets
+    # projects/ is a subdirectory. Directory apps skip subdirectories unless
+    # recurse is set, and the locked default project lives in that subdirectory.
+    directory:
+      recurse: true
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd

@@ -32,10 +32,15 @@ spec:
       finalizers:
         - resources-finalizer.argocd.argoproj.io
     spec:
-      project: "{{ .project }}"
+      # Project and namespace come from the directory. .path.segments is that
+      # directory only; the filename is .path.filename. A file under
+      # 03_workloads is project workloads and namespace <folder>. Every other
+      # area is project platform and keeps the namespace written in the file.
+      # The project and namespace keys in argo_app.yaml are ignored.
+      project: '{{ if eq (index .path.segments 1) "03_workloads" }}workloads{{ else }}platform{{ end }}'
       destination:
         server: https://kubernetes.default.svc
-        namespace: "{{ .namespace }}"
+        namespace: '{{ if eq (index .path.segments 1) "03_workloads" }}{{ index .path.segments 2 }}{{ else }}{{ .namespace }}{{ end }}'
       syncPolicy:
         automated:
           prune: true

@@ -37,26 +37,3 @@ spec:
   namespaceResourceWhitelist:
     - group: "*"
       kind: "*"
----
-apiVersion: argoproj.io/v1alpha1
-kind: AppProject
-metadata:
-  name: workloads
-  namespace: argocd
-  annotations:
-    argocd.argoproj.io/sync-wave: "-1"
-spec:
-  description: Lab workloads.
-  sourceRepos:
-    - https://github.com/aherkstroeter/kubernetes-cloudlab.git
-  destinations:
-    - server: https://kubernetes.default.svc
-      namespace: echo
-    - server: https://kubernetes.default.svc
-      namespace: www
-  clusterResourceWhitelist:
-    - group: ""
-      kind: Namespace
-  namespaceResourceWhitelist:
-    - group: "*"
-      kind: "*"

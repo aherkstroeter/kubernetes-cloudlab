@@ -1,0 +1,15 @@
+# Files every tenant inherits. GitHub enforces this when branch protection
+# requires a code-owner review. Until then the file is the contract.
+
+/02_ArgoCD/appsets/applicationset.yaml @aherkstroeter
+/02_ArgoCD/appsets/projects/ @aherkstroeter
+/02_ArgoCD/bootstrap/root-app.yaml @aherkstroeter
+/02_ArgoCD/01_networking/envoy-gateway/manifests/gateway.yaml @aherkstroeter
+/02_ArgoCD/01_networking/envoy-gateway/manifests/gatewayclass.yaml @aherkstroeter
+/02_ArgoCD/01_networking/envoy-gateway/manifests/envoyproxy.yaml @aherkstroeter
+/02_ArgoCD/02_platform/argocd/values.yaml @aherkstroeter
+/02_ArgoCD/01_networking/external-dns/values.yaml @aherkstroeter
+/02_ArgoCD/02_platform/cert-manager/manifests/clusterissuer.yaml @aherkstroeter
+/01_Terraform/modules/lab_argocd/templates/install.sh.tftpl @aherkstroeter
+/01_Terraform/modules/k3s/templates/install.sh.tftpl @aherkstroeter
+/01_Terraform/modules/kubernetes/templates/ @aherkstroeter
